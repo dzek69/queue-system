@@ -1,0 +1,12 @@
+{
+  "name": "queue-system",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": "https://github.com/dzek69/queue-system.git",
+  "author": "Jacek Nowacki @dzek69 <git-public@dzek.eu>",
+  "license": "MIT",
+  "scripts": {
+  },
+  "devDependencies": {
+  }
+}
