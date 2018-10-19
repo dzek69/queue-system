@@ -1,0 +1,21 @@
+{
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "browsers": [
+            "last 2 versions", "> 5%", "ie > 9"
+          ]
+        }
+      }
+    ]
+  ],
+  "env": {
+    "testing": {
+      "plugins": [
+        "rewire"
+      ]
+    }
+  }
+}

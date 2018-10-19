@@ -1,0 +1,8 @@
+/.idea/
+/build-scripts/
+/test/
+
+/.babelrc
+/yarn.lock
+/*.tgz
+/*.log

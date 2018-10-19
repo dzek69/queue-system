@@ -1,12 +1,33 @@
 {
   "name": "queue-system",
-  "version": "1.0.0",
+  "version": "1.0.1-beta.1",
   "main": "src/index.js",
   "repository": "https://github.com/dzek69/queue-system.git",
   "author": "Jacek Nowacki @dzek69 <git-public@dzek.eu>",
   "license": "MIT",
   "scripts": {
+    "test": "cross-env NODE_ENV=testing mocha 'src/**/*.spec.js'",
+    "docs": "node build-scripts/docs && jsdoc src README.md -t node_modules/docdash -d ./docs -u ./tutorials && node build-scripts/docs.after",
+    "transpile": "node build-scripts/transpile && babel src -d dist --ignore spec.js",
+    "prepublishOnly": "npm run test && npm run lint && npm run docs",
+    "prepack": "npm run transpile",
+    "lint": "eslint src/**/*.js src/*.js",
+    "lint:fix": "npm run lint -- --fix"
   },
   "devDependencies": {
+    "@dzek69/eslint-config-base": "^0.0.1",
+    "babel-cli": "^6.26.0",
+    "babel-plugin-rewire": "^1.1.0",
+    "babel-preset-env": "^1.6.1",
+    "cross-env": "^5.2.0",
+    "docdash": "^1.0.0",
+    "eslint": "^5.6.1",
+    "fs-extra": "^7.0.0",
+    "jsdoc": "^3.5.5",
+    "mocha": "^4.0.1",
+    "must": "^0.13.4"
+  },
+  "dependencies": {
+    "eventemitter3": "^3.1.0"
   }
 }
