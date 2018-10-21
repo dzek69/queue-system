@@ -13,10 +13,12 @@ class Task {
             this.resolve = _resolve;
             this.reject = _reject;
         });
+
+        this.start = this.run;
     }
 
-    run() {
-        if (!this._check()) {
+    run(force) {
+        if (!force && !this._check()) {
             return;
         }
         if (this._started) {
