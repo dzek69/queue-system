@@ -321,71 +321,68 @@ describe("Queue", () => {
     it("allows to update concurrency", async () => {
         const q = new Queue();
 
-        const result = [];
+        const runningTasks = {
+            max: 0,
+            current: 0,
+            reset() {
+                this.max = 0;
+            },
+            start() {
+                this.current++;
+                if (this.max < this.current) {
+                    this.max = this.current;
+                }
+            },
+            stop() {
+                this.current--;
+            },
+        };
+
         const task = () => new Promise((resolve) => {
-            result.push("1s");
+            runningTasks.start();
             setTimeout(() => {
-                result.push("1e");
+                runningTasks.stop();
                 resolve();
-            }, 100);
+            }, 10);
         });
 
-        const taskAnother = () => new Promise((resolve) => {
-            result.push("2s");
-            setTimeout(() => {
-                result.push("2e");
-                resolve();
-            }, 75);
-        });
+        const pushTasks = (count) => {
+            const tasks = [];
+            for (let i = 0; i < count; i++) {
+                tasks.push(q.push(task).promise);
+            }
+            return tasks;
+        };
 
-        const yetAnother = () => new Promise((resolve) => {
-            result.push("3s");
-            setTimeout(() => {
-                result.push("3e");
-                resolve();
-            }, 50);
-        });
-
-        const taskInstance1 = q.push(task);
-        const taskInstance2 = q.push(taskAnother);
-        const taskInstance3 = q.push(yetAnother);
-        const taskInstance4 = q.push(task);
-        const taskInstance5 = q.push(taskAnother);
-        const taskInstance6 = q.push(yetAnother);
+        runningTasks.max.must.equal(0);
 
         q.setConcurrency(2);
 
-        await Promise.all([
-            taskInstance1.promise,
-            taskInstance2.promise,
-        ]);
+        runningTasks.max.must.equal(0);
 
-        q.setConcurrency(3);
+        const tasksPack1 = pushTasks(10);
+        await Promise.all(tasksPack1);
 
-        await Promise.all([
-            taskInstance1.promise,
-            taskInstance2.promise,
-            taskInstance3.promise,
-            taskInstance4.promise,
-            taskInstance5.promise,
-            taskInstance6.promise,
-        ]);
+        runningTasks.current.must.equal(0);
+        runningTasks.max.must.equal(2);
 
-        result.must.eql([
-            // concurrency set to 2, until first and second task ends, then it switches to 3
-            "1s", // 1
-            "2s", // 2
-            "2e", // 1
-            "3s", // 2
-            "1e", // 1, now switching concurrency to 3
-            "1s", // 2
-            "2s", // 3
-            "3e", // 2
-            "3s", // 3
-            "2e", // 2
-            "3e", // 1
-            "1e", // 0
-        ]);
+        runningTasks.reset();
+        q.setConcurrency(1);
+
+        const tasksPack2 = pushTasks(10);
+        await Promise.all(tasksPack2);
+
+        runningTasks.current.must.equal(0);
+        runningTasks.max.must.equal(1);
+
+        runningTasks.reset();
+        q.setConcurrency(5);
+
+        const tasksPack3 = pushTasks(20);
+        await Promise.all(tasksPack3);
+
+        runningTasks.current.must.equal(0);
+        runningTasks.max.must.equal(5);
 
         q.destroy();
     });
