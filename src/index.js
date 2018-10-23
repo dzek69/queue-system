@@ -60,13 +60,20 @@ class Queue {
                 this._removeRunning(task); // eslint-disable-line no-use-before-define
                 this._runNext();
             };
-            return taskFn().then((result) => {
+
+            try {
+                return taskFn().then((result) => {
+                    end();
+                    return result;
+                }, (error) => {
+                    end();
+                    throw error;
+                });
+            }
+            catch (e) {
                 end();
-                return result;
-            }, (error) => {
-                end();
-                throw error;
-            });
+                return Promise.reject(e);
+            }
         };
         const task = new Task(this, run, check);
         return task;

@@ -10,8 +10,8 @@ class Task {
         this.id = id++;
 
         this.promise = new Promise((_resolve, _reject) => {
-            this.resolve = _resolve;
-            this.reject = _reject;
+            this._resolve = _resolve;
+            this._reject = _reject;
         });
 
         this.start = this.run;
@@ -27,7 +27,7 @@ class Task {
 
         this._started = true;
 
-        return this._fn().then(this.resolve, this.reject);
+        return this._fn().then(this._resolve, this._reject);
     }
 
     remove() {

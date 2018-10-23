@@ -396,4 +396,112 @@ describe("Queue", () => {
             "1e", // 0
         ]);
     });
+
+    it("works with rejecting tasks", async () => {
+        const result = [];
+        const q = new Queue();
+
+        const delayedTask = () => new Promise((resolve, reject) => {
+            setTimeout(() => {
+                reject(new Error("delayed"));
+            }, 100);
+        });
+
+        const instantTask = () => new Promise((resolve, reject) => {
+            reject(new Error("instant"));
+        });
+
+        const okTask = () => new Promise((resolve) => {
+            setTimeout(() => {
+                resolve("ok");
+            }, 100);
+        });
+
+        const taskInstance1 = q.push(delayedTask);
+        const taskInstance2 = q.push(instantTask);
+        const taskInstance3 = q.push(okTask);
+
+        const handleSuccess = data => result.push(data);
+        const handleError = error => result.push("E:" + error.message);
+
+        await Promise.all([
+            taskInstance1.promise.then(handleSuccess, handleError),
+            taskInstance2.promise.then(handleSuccess, handleError),
+            taskInstance3.promise.then(handleSuccess, handleError),
+        ]);
+
+        result.must.eql([
+            "E:delayed", "E:instant", "ok",
+        ]);
+    });
+
+    it("works with rejecting tasks (concurrency)", async () => {
+        const result = [];
+        const q = new Queue({
+            concurrency: 2,
+        });
+
+        const delayedTask = () => new Promise((resolve, reject) => {
+            setTimeout(() => {
+                reject(new Error("delayed"));
+            }, 100);
+        });
+
+        const instantTask = () => new Promise((resolve, reject) => {
+            reject(new Error("instant"));
+        });
+
+        const okTask = () => new Promise((resolve) => {
+            setTimeout(() => {
+                resolve("ok");
+            }, 100);
+        });
+
+        const taskInstance1 = q.push(delayedTask);
+        const taskInstance2 = q.push(instantTask);
+        const taskInstance3 = q.push(okTask);
+
+        const handleSuccess = data => result.push(data);
+        const handleError = error => result.push("E:" + error.message);
+
+        await Promise.all([
+            taskInstance1.promise.then(handleSuccess, handleError),
+            taskInstance2.promise.then(handleSuccess, handleError),
+            taskInstance3.promise.then(handleSuccess, handleError),
+        ]);
+
+        result.must.eql([
+            "E:instant", "E:delayed", "ok",
+        ]);
+    });
+
+    it("works with tasks throwing an error", async () => {
+        const result = [];
+        const q = new Queue();
+
+        const throwingTask = () => {
+            throw new Error("throw");
+        };
+
+        const okTask = () => new Promise((resolve) => {
+            setTimeout(() => {
+                resolve("ok");
+            }, 100);
+        });
+
+        const taskInstance1 = q.push(throwingTask);
+        const taskInstance2 = q.push(okTask);
+
+        const handleSuccess = data => result.push(data);
+        const handleError = error => result.push("E:" + error.message);
+
+        await Promise.all([
+            taskInstance1.promise.then(handleSuccess, handleError),
+            taskInstance2.promise.then(handleSuccess, handleError),
+        ]);
+
+        result.must.eql([
+            "E:throw", "ok",
+        ]);
+    });
 });
