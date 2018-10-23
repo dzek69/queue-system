@@ -321,7 +321,7 @@ describe("Queue", () => {
     it("allows to update concurrency", async () => {
         const q = new Queue();
 
-        const runningTasks = {
+        const runningTasks = { // eslint-disable-line object-shorthand
             max: 0,
             current: 0,
             reset() {
