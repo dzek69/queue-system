@@ -2,6 +2,63 @@ import Queue from "./index";
 
 const noop = () => {}; // eslint-disable-line no-empty-function
 
+const ACTIONS = {
+    RESOLVE: {},
+    REJECT: {},
+    THROW: {},
+};
+
+const TIME = {
+    INSTANT: {},
+};
+
+const createTestTask = (action, value, time) => () => {
+    if (action === ACTIONS.THROW) {
+        const doAction = () => {
+            throw new Error(value);
+        };
+        if (time === TIME.INSTANT) {
+            doAction();
+        }
+        else {
+            setTimeout(doAction, time);
+        }
+    }
+    else if (action !== ACTIONS.REJECT && action !== ACTIONS.RESOLVE) {
+        throw new Error("wrong action");
+    }
+    else {
+        return new Promise((resolve, reject) => {
+            const doAction = () => {
+                if (action === ACTIONS.RESOLVE) {
+                    resolve(value);
+                }
+                else {
+                    reject(new Error(value));
+                }
+            };
+
+            if (time === TIME.INSTANT) {
+                doAction();
+            }
+            else {
+                setTimeout(doAction, time);
+            }
+        });
+    }
+};
+
+const knownEvents = [
+    "task-add",
+    "task-remove",
+    "task-start",
+    "task-end",
+    "task-success",
+    "task-error",
+    "task-thrown",
+    "queue-size",
+];
+
 describe("Queue", () => {
     it("basic queuing works", async () => {
         const q = new Queue();
@@ -428,7 +485,7 @@ describe("Queue", () => {
 
         const events = [];
 
-        const handleTask = (name, data) => {
+        const handleEvent = (name, data) => {
             const secondArg = name.includes("task-") ? data.id : data;
 
             events.push([
@@ -436,66 +493,9 @@ describe("Queue", () => {
             ]);
         };
 
-        const eventsToListen = [
-            "task-add",
-            "task-remove",
-            "task-start",
-            "task-end",
-            "task-success",
-            "task-error",
-            "task-thrown",
-            "queue-size",
-        ];
-
-        eventsToListen.forEach(eventName => {
-            q.addEventListener(eventName, handleTask.bind(null, eventName));
+        knownEvents.forEach(eventName => {
+            q.addEventListener(eventName, handleEvent.bind(null, eventName));
         });
-
-        const ACTIONS = {
-            RESOLVE: {},
-            REJECT: {},
-            THROW: {},
-        };
-
-        const TIME = {
-            INSTANT: {},
-        };
-
-        const createTestTask = (action, value, time) => () => {
-            if (action === ACTIONS.THROW) {
-                const doAction = () => {
-                    throw new Error(value);
-                };
-                if (time === TIME.INSTANT) {
-                    doAction();
-                }
-                else {
-                    setTimeout(doAction, time);
-                }
-            }
-            else if (action !== ACTIONS.REJECT && action !== ACTIONS.RESOLVE) {
-                throw new Error("wrong action");
-            }
-            else {
-                return new Promise((resolve, reject) => {
-                    const doAction = () => {
-                        if (action === ACTIONS.RESOLVE) {
-                            resolve(value);
-                        }
-                        else {
-                            reject(new Error(value));
-                        }
-                    };
-
-                    if (time === TIME.INSTANT) {
-                        doAction();
-                    }
-                    else {
-                        setTimeout(doAction, time);
-                    }
-                });
-            }
-        };
 
         const taskInstance1 = q.push(createTestTask(
             ACTIONS.RESOLVE, "ok1", 100,
@@ -635,14 +635,102 @@ describe("Queue", () => {
             concurrency: 2,
         });
 
-        (() => {
-            q.addEventListener("aaa");
-        }).must.throw("Unknown event");
-        (() => {
-            q.removeEventListener("aaa");
-        }).must.throw("Unknown event");
-        (() => {
-            q.removeEventListener("task-end");
-        }).must.not.throw();
+        (() => q.addEventListener("aaa")).must.throw("Unknown event");
+        (() => q.removeEventListener("aaa")).must.throw("Unknown event");
+        (() => q.removeEventListener("task-end")).must.not.throw();
+    });
+
+    it("allow to destroy instance which removes listeners and clears not-finished tasks", async () => {
+        const q = new Queue({
+            concurrency: 2,
+        });
+
+        const events = [];
+
+        const handleEvent = (name, data) => {
+            const secondArg = name.includes("task-") ? data.id : data;
+
+            events.push([
+                name, secondArg,
+            ]);
+        };
+
+        knownEvents.forEach(eventName => {
+            q.addEventListener(eventName, handleEvent.bind(null, eventName));
+        });
+
+        const results = [];
+
+        const handleTask = (result) => {
+            if (result instanceof Error) {
+                results.push("E:" + result.message);
+                return;
+            }
+            results.push("OK:" + result);
+        };
+
+        const taskInstance1 = q.add(createTestTask(ACTIONS.RESOLVE, "ok1", 100));
+        const taskInstance2 = q.add(createTestTask(ACTIONS.REJECT, "err2", 100));
+        const taskInstance3 = q.prepend(createTestTask(ACTIONS.REJECT, "err3", 100));
+        const taskInstance4 = q.prepend(createTestTask(ACTIONS.RESOLVE, "ok4", 100));
+
+        taskInstance1.promise.then(handleTask, handleTask);
+        taskInstance2.promise.then(handleTask, handleTask);
+        taskInstance3.promise.then(handleTask, handleTask);
+        taskInstance4.promise.then(handleTask, handleTask);
+
+        const destroyResult = q.destroy();
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        results.must.eql([
+            "OK:ok1",
+            "E:err2",
+        ]);
+
+        events.must.eql([
+            ["task-add", 1],
+            ["queue-size", 1],
+            ["task-start", 1],
+
+            ["task-add", 2],
+            ["queue-size", 2],
+            ["task-start", 2],
+
+            ["task-add", 3],
+            ["queue-size", 3],
+
+            ["task-add", 4],
+            ["queue-size", 4],
+        ]);
+
+        destroyResult.must.eql({
+            removed: [taskInstance4, taskInstance3], // 4, 3 because prepend was used
+            inProgress: [taskInstance1, taskInstance2],
+        });
+    });
+
+    it("doesn't allow to do anything beside queue size query on destroyed instance", () => {
+        const q = new Queue({
+            concurrency: 2,
+        });
+
+        q.destroy();
+
+        (() => q.destroy()).must.throw("This instance is destroyed");
+        (() => q.addEventListener()).must.throw("This instance is destroyed");
+        (() => q.removeEventListener()).must.throw("This instance is destroyed");
+        (() => q.setConcurrency()).must.throw("This instance is destroyed");
+        (() => q.add()).must.throw("This instance is destroyed");
+        (() => q.push()).must.throw("This instance is destroyed");
+        (() => q.prepend()).must.throw("This instance is destroyed");
+        (() => q.unshift()).must.throw("This instance is destroyed");
+        (() => q.remove()).must.throw("This instance is destroyed");
+
+        q.getQueueSize().must.equal(0);
+    });
+
+    it("throws when trying to remove task/value that doesn't exist", () => {
+        throw new Error("Not implemented.");
     });
 });
