@@ -108,6 +108,9 @@ class Queue {
                 return Promise.reject(e);
             }
         };
+        if (taskFn.id) {
+            run.id = taskFn.id;
+        }
         /* eslint-enable no-use-before-define */
         const task = new Task(this, run, check);
         return task;

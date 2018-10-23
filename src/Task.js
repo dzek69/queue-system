@@ -8,6 +8,9 @@ class Task {
         this._check = check;
         this._started = false;
         this.id = id++;
+        if (fn.id) {
+            this.id = fn.id;
+        }
 
         this.promise = new Promise((_resolve, _reject) => {
             this._resolve = _resolve;
@@ -31,7 +34,6 @@ class Task {
     }
 
     remove() {
-        console.log("remove self from queue", this.id);
         this._queue.remove(this);
     }
 }
