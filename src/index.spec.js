@@ -1,5 +1,7 @@
 import Queue from "./index";
 
+const noop = () => {}; // eslint-disable-line no-empty-function
+
 describe("Queue", () => {
     it("basic queuing works", async () => {
         const q = new Queue();
@@ -132,92 +134,6 @@ describe("Queue", () => {
 
         result.must.eql([
             "a", "b", "bb", "c", "aa", "cc",
-        ]);
-    });
-
-    it("emits right events", async () => {
-        const q = new Queue({
-            concurrency: 2,
-        });
-
-        const events = [];
-
-        const onTaskAdd = (id) => {
-            events.push("add" + id);
-        };
-        const onTaskRemove = (id) => {
-            events.push("remove" + id);
-        };
-        const onTaskStart = (id) => {
-            events.push("start" + id);
-        };
-        const onTaskEnd = (id) => {
-            events.push("end" + id);
-        };
-        const onQueueSize = (size) => {
-            events.push("size" + size);
-        };
-
-        q.addEventListener("task-add", onTaskAdd);
-        q.addEventListener("task-remove", onTaskRemove);
-        q.addEventListener("task-start", onTaskStart);
-        q.addEventListener("task-end", onTaskEnd);
-        q.addEventListener("queue-size", onQueueSize);
-
-        const result = [];
-        const task = () => new Promise((resolve) => {
-            result.push("a");
-            setTimeout(() => {
-                result.push("aa");
-                resolve();
-            }, 100);
-        });
-
-        const taskAnother = () => new Promise((resolve) => {
-            result.push("b");
-            setTimeout(() => {
-                result.push("bb");
-                resolve();
-            }, 50);
-        });
-
-        const yetAnother = () => new Promise((resolve) => {
-            result.push("c");
-            setTimeout(() => {
-                result.push("cc");
-                resolve();
-            }, 100);
-        });
-
-        const taskInstance1 = q.push(task);
-        const taskInstance2 = q.push(taskAnother);
-        const taskInstance3 = q.push(yetAnother);
-
-        await Promise.all([
-            taskInstance1.promise,
-            taskInstance2.promise,
-            taskInstance3.promise,
-        ]);
-
-        events.must.eql([
-            "add11",
-            "size1",
-            "start11",
-            "add12",
-            "size2",
-            "start12",
-            "add13",
-            "size3",
-            "end12",
-            "remove12",
-            "size2",
-            "start13",
-            "end11",
-            "remove11",
-            "size1",
-            "end13",
-            "remove13",
-            "size0",
         ]);
     });
 
@@ -503,5 +419,230 @@ describe("Queue", () => {
         result.must.eql([
             "E:throw", "ok",
         ]);
+    });
+
+    it("emits right events", async () => {
+        const q = new Queue({
+            concurrency: 2,
+        });
+
+        const events = [];
+
+        const handleTask = (name, data) => {
+            const secondArg = name.includes("task-") ? data.id : data;
+
+            events.push([
+                name, secondArg,
+            ]);
+        };
+
+        const eventsToListen = [
+            "task-add",
+            "task-remove",
+            "task-start",
+            "task-end",
+            "task-success",
+            "task-error",
+            "task-thrown",
+            "queue-size",
+        ];
+
+        eventsToListen.forEach(eventName => {
+            q.addEventListener(eventName, handleTask.bind(null, eventName));
+        });
+
+        const ACTIONS = {
+            RESOLVE: {},
+            REJECT: {},
+            THROW: {},
+        };
+
+        const TIME = {
+            INSTANT: {},
+        };
+
+        const createTestTask = (action, value, time) => () => {
+            if (action === ACTIONS.THROW) {
+                const doAction = () => {
+                    throw new Error(value);
+                };
+                if (time === TIME.INSTANT) {
+                    doAction();
+                }
+                else {
+                    setTimeout(doAction, time);
+                }
+            }
+            else if (action !== ACTIONS.REJECT && action !== ACTIONS.RESOLVE) {
+                throw new Error("wrong action");
+            }
+            else {
+                return new Promise((resolve, reject) => {
+                    const doAction = () => {
+                        if (action === ACTIONS.RESOLVE) {
+                            resolve(value);
+                        }
+                        else {
+                            reject(new Error(value));
+                        }
+                    };
+
+                    if (time === TIME.INSTANT) {
+                        doAction();
+                    }
+                    else {
+                        setTimeout(doAction, time);
+                    }
+                });
+            }
+        };
+
+        const taskInstance1 = q.push(createTestTask(
+            ACTIONS.RESOLVE, "ok1", 100,
+        ));
+        const taskInstance2 = q.push(createTestTask(
+            ACTIONS.RESOLVE, "ok2", 100,
+        ));
+
+        taskInstance1.id = 1;
+        taskInstance2.id = 2;
+
+        await Promise.all([
+            taskInstance1.promise.catch(noop),
+            taskInstance2.promise.catch(noop),
+        ]);
+
+        const taskInstance3 = q.push(createTestTask(
+            ACTIONS.REJECT, "err3", 100,
+        ));
+        const taskInstance4 = q.push(createTestTask(
+            ACTIONS.REJECT, "err4", 100,
+        ));
+        const taskInstance5 = q.push(createTestTask(
+            ACTIONS.REJECT, "err5", TIME.INSTANT,
+        ));
+        const taskInstance6 = q.push(createTestTask(
+            ACTIONS.THROW, "thr6", TIME.INSTANT,
+        ));
+        const taskInstance7 = q.prepend(createTestTask( // note prepend here
+            ACTIONS.RESOLVE, "ok7", TIME.INSTANT,
+        ));
+        const taskInstance8 = q.insertAt(createTestTask(
+            ACTIONS.RESOLVE, "ok8", 100,
+        ), 1);
+
+        taskInstance3.id = 3;
+        taskInstance4.id = 4;
+        taskInstance5.id = 5;
+        taskInstance6.id = 6;
+        taskInstance7.id = 7;
+        taskInstance8.id = 8;
+
+        await Promise.all([
+            taskInstance3.promise.catch(noop),
+            taskInstance4.promise.catch(noop),
+            taskInstance5.promise.catch(noop),
+            taskInstance6.promise.catch(noop),
+            taskInstance7.promise.catch(noop),
+            taskInstance8.promise.catch(noop),
+        ]);
+
+        events.must.eql([
+            ["task-add", 1], // async task
+            ["queue-size", 1],
+            ["task-start", 1],
+
+            ["task-add", 2], // async task
+            ["queue-size", 2],
+            ["task-start", 2],
+            // awaiting here for two first before adding more
+
+            ["task-end", 1],
+            ["task-success", 1],
+            ["task-remove", 1],
+            ["queue-size", 1],
+
+            ["task-end", 2],
+            ["task-success", 2],
+            ["task-remove", 2],
+            ["queue-size", 0],
+
+            ["task-add", 3], // async error task
+            ["queue-size", 1],
+            ["task-start", 3],
+
+            ["task-add", 4], // async error task
+            ["queue-size", 2],
+            ["task-start", 4],
+
+            ["task-add", 5], // instant error, queue full
+            ["queue-size", 3],
+
+            ["task-add", 6], // instant throw, queue full
+            ["queue-size", 4],
+
+            ["task-add", 7], // instant resolve, prepend, queue full
+            ["queue-size", 5],
+
+            ["task-add", 8], // instant resolve, insert at 1, queue full
+            // current position: [7, 8, 3, 4, 5, 6]
+            // expected end order: [3, 4, (already started), 7, 8, 5, 6]
+            // expected start order: [7, 8, 5, 6]
+            ["queue-size", 6],
+
+            ["task-end", 3],
+            ["task-error", 3],
+            ["task-remove", 3],
+            ["queue-size", 5],
+
+            ["task-start", 7],
+
+            ["task-end", 4],
+            ["task-error", 4],
+            ["task-remove", 4],
+            ["queue-size", 4],
+
+            ["task-start", 8], // async
+
+            ["task-end", 7],
+            ["task-success", 7],
+            ["task-remove", 7],
+            ["queue-size", 3],
+
+            ["task-start", 5],
+            ["task-end", 5],
+            ["task-error", 5],
+            ["task-remove", 5],
+            ["queue-size", 2],
+
+            ["task-start", 6],
+            ["task-end", 6],
+            ["task-thrown", 6],
+            ["task-remove", 6],
+            ["queue-size", 1],
+
+            ["task-end", 8],
+            ["task-success", 8],
+            ["task-remove", 8],
+            ["queue-size", 0],
+        ]);
+
+        // @todo add destroy here
+    });
+
+    it("throws when adding unknown events", () => {
+        const q = new Queue({
+            concurrency: 2,
+        });
+
+        (() => {
+            q.addEventListener("aaa");
+        }).must.throw("Unknown event");
+        (() => {
+            q.removeEventListener("aaa");
+        }).must.throw("Unknown event");
+        (() => {
+            q.removeEventListener("task-end");
+        }).must.not.throw();
     });
 });

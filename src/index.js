@@ -12,6 +12,17 @@ const remove = (array, searchItem) => {
     array.splice(index, 1);
 };
 
+const knownEvents = [
+    "task-add",
+    "task-remove",
+    "task-start",
+    "task-end",
+    "task-success",
+    "task-error",
+    "task-thrown",
+    "queue-size",
+];
+
 class Queue {
     constructor(options = {}) {
         this._concurrency = options.concurrency || 1;
@@ -26,8 +37,6 @@ class Queue {
     }
 
     _runNext() {
-        console.log(this._tasks.map(t => t.id));
-        console.log(this._runningTasks.map(t => t.id));
         const taskToRun = this._tasks.find((task) => {
             return !this._runningTasks.includes(task);
         });
@@ -45,45 +54,51 @@ class Queue {
 
     _createTask(taskFn) {
         const check = () => {
-            console.log("check", task.id, this._runningTasks < this._concurrency);
             return this._isConcurrencySlotFree();
         };
+        /* eslint-disable no-use-before-define */
         const run = () => {
-            console.log("running task", task.id); // eslint-disable-line no-use-before-define
-            this._ee.emit("task-start", task.id);
-            this._runningTasks.push(task); // eslint-disable-line no-use-before-define
+            this._ee.emit("task-start", task);
+            this._runningTasks.push(task);
 
-            const end = () => {
-                this._ee.emit("task-end", task.id);
-                console.log("task done", task.id); // eslint-disable-line no-use-before-define
-                this.remove(task); // eslint-disable-line no-use-before-define
-                this._removeRunning(task); // eslint-disable-line no-use-before-define
+            const end = (event) => {
+                this._ee.emit("task-end", task);
+                this._ee.emit("task-" + event, task);
+                this.remove(task);
+                this._removeRunning(task);
                 this._runNext();
             };
 
             try {
                 return taskFn().then((result) => {
-                    end();
+                    end("success");
                     return result;
                 }, (error) => {
-                    end();
+                    end("error");
                     throw error;
                 });
             }
             catch (e) {
-                end();
+                end("thrown");
                 return Promise.reject(e);
             }
         };
+        /* eslint-enable no-use-before-define */
         const task = new Task(this, run, check);
         return task;
     }
 
     addEventListener(eventName, fn) {
+        if (!knownEvents.includes(eventName)) {
+            throw new Error("Unknown event");
+        }
         this._ee.on(eventName, fn);
     }
 
     removeEventListener(eventName, fn) {
+        if (!knownEvents.includes(eventName)) {
+            throw new Error("Unknown event");
+        }
         this._ee.off(eventName, fn);
     }
 
@@ -95,8 +110,8 @@ class Queue {
     add(taskFn) {
         const task = this._createTask(taskFn);
         this._tasks.push(task);
-        this._ee.emit("task-add", task.id);
-        this._ee.emit("queue-size", this._tasks.length);
+        this._ee.emit("task-add", task);
+        this._ee.emit("queue-size", this.getQueueSize());
         this._runNext();
         return task;
     }
@@ -104,34 +119,33 @@ class Queue {
     prepend(taskFn) {
         const task = this._createTask(taskFn);
         this._tasks.unshift(task);
-        this._ee.emit("task-add", task.id);
-        this._ee.emit("queue-size", this._tasks.length);
+        this._ee.emit("task-add", task);
+        this._ee.emit("queue-size", this.getQueueSize());
         this._runNext();
         return task;
     }
 
     insertAt(taskFn, index) {
         const task = this._createTask(taskFn);
-        console.log("***");
-        console.log(">", this._tasks.map(t => t.id));
         this._tasks.splice(index, 0, task);
-        console.log(">", this._tasks.map(t => t.id));
-        this._ee.emit("task-add", task.id);
-        this._ee.emit("queue-size", this._tasks.length);
+        this._ee.emit("task-add", task);
+        this._ee.emit("queue-size", this.getQueueSize());
         this._runNext();
         return task;
     }
 
     remove(task) {
-        console.log("removing", task.id);
         remove(this._tasks, task);
-        this._ee.emit("task-remove", task.id);
-        this._ee.emit("queue-size", this._tasks.length);
+        this._ee.emit("task-remove", task);
+        this._ee.emit("queue-size", this.getQueueSize());
     }
 
     _removeRunning(task) {
-        console.log("removing running", task.id);
         remove(this._runningTasks, task);
+    }
+
+    getQueueSize() {
+        return this._tasks.length;
     }
 }
 
