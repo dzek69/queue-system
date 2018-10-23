@@ -171,7 +171,11 @@ class Queue {
     }
 
     _remove(task) {
+        const lengthBefore = this._tasks.length;
         remove(this._tasks, task);
+        if (this._tasks.length === lengthBefore) {
+            throw new Error("Task not found in queue");
+        }
         this._ee.emit("task-remove", task);
         this._ee.emit("queue-size", this.getQueueSize());
     }

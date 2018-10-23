@@ -730,7 +730,15 @@ describe("Queue", () => {
         q.getQueueSize().must.equal(0);
     });
 
-    it("throws when trying to remove task/value that doesn't exist", () => {
-        throw new Error("Not implemented.");
+    it("throws when trying to remove task/value that doesn't exist", async () => {
+        const q = new Queue();
+
+        const taskInstance = q.add(createTestTask(ACTIONS.RESOLVE, "ok", TIME.INSTANT));
+
+        await taskInstance.promise;
+
+        (() => q.remove(taskInstance)).must.throw("Task not found in queue");
+
+        q.destroy();
     });
 });
