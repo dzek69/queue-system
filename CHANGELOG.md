@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - aliases for event (un)registering
 - "once" event
 - cancelling task support
+### Changed
+- README updated to contain basic info about what this library is, current features and expected "todo" features
 
 ## [1.0.1] 2018-10-23
 ### Added
