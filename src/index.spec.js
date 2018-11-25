@@ -842,4 +842,62 @@ describe("Queue", () => {
 
         q.destroy();
     });
+
+    it("provides a way to cancel the task and racing for cancel", async () => {
+        const q = new Queue();
+
+        let caught;
+
+        const task = async (isCancelled, cancelPromise) => {
+            await Promise.race([
+                new Promise(resolve => setTimeout(() => resolve(666), 300)),
+                cancelPromise,
+            ]);
+        };
+
+        const myTask = q.add(task);
+        myTask.promise.catch((error) => {
+            caught = true;
+            error.message.must.equal("Task cancelled");
+        });
+
+        setTimeout(myTask.cancel, 200);
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        caught.must.be.true();
+    });
+
+    it("provides a way to cancel the task and checking for cancel each step", async () => {
+        const q = new Queue();
+
+        let caught;
+
+        const task = async (isCancelled) => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await isCancelled();
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await isCancelled();
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await isCancelled();
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await isCancelled();
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await isCancelled();
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await isCancelled();
+            return 666; // end task with success;
+        };
+
+        const myTask = q.add(task);
+        myTask.promise.catch((error) => {
+            caught = true;
+            error.message.must.equal("Task cancelled");
+        });
+
+        setTimeout(myTask.cancel, 200);
+        await new Promise(resolve => setTimeout(resolve, 260)); // 260, because check happens every ~50ms and it's
+        // not instant like in previous example, we need to give time for task to become aware that cancelling happened
+
+        caught.must.be.true();
+    });
 });

@@ -90,7 +90,7 @@ class Queue {
             return this._isConcurrencySlotFree();
         };
         /* eslint-disable no-use-before-define */
-        const run = () => {
+        const run = (isCancelled, cancelPromise) => {
             this._ee.emit("task-start", task);
             this._runningTasks.push(task);
 
@@ -103,7 +103,7 @@ class Queue {
             };
 
             try {
-                const taskPromise = taskFn();
+                const taskPromise = taskFn(isCancelled, cancelPromise);
                 if (isPromiseLike(taskPromise)) {
                     return taskPromise.then((result) => {
                         end("success");
