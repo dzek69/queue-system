@@ -23,6 +23,10 @@ const knownEvents = [
     "queue-size",
 ];
 
+const isPromiseLike = (object) => {
+    return object && typeof object.then === "function" && typeof object.catch === "function";
+};
+
 class Queue {
     constructor(options = {}) {
         this._concurrency = options.concurrency || 1;
@@ -36,6 +40,10 @@ class Queue {
         this._ee = new EventEmitter();
 
         this._destroyed = false;
+
+        this.on = this.addEventListener;
+        this.off = this.removeEventListener;
+        this.once = this.addEventListenerOnce;
     }
 
     _destroyedCheck() {
@@ -95,13 +103,18 @@ class Queue {
             };
 
             try {
-                return taskFn().then((result) => {
-                    end("success");
-                    return result;
-                }, (error) => {
-                    end("error");
-                    throw error;
-                });
+                const taskPromise = taskFn();
+                if (isPromiseLike(taskPromise)) {
+                    return taskPromise.then((result) => {
+                        end("success");
+                        return result;
+                    }, (error) => {
+                        end("error");
+                        throw error;
+                    });
+                }
+                end("success");
+                return Promise.resolve(taskPromise);
             }
             catch (e) {
                 end("thrown");
@@ -122,6 +135,20 @@ class Queue {
             throw new Error("Unknown event");
         }
         this._ee.on(eventName, fn);
+        return () => {
+            this.removeEventListener(eventName, fn);
+        };
+    }
+
+    addEventListenerOnce(eventName, fn) {
+        this._destroyedCheck();
+        if (!knownEvents.includes(eventName)) {
+            throw new Error("Unknown event");
+        }
+        this._ee.once(eventName, fn);
+        return () => {
+            this.removeEventListener(eventName, fn);
+        };
     }
 
     removeEventListener(eventName, fn) {

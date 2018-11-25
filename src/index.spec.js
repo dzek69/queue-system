@@ -642,17 +642,16 @@ describe("Queue", () => {
             ["queue-size", 5],
 
             ["task-start", 7],
-
-            ["task-end", 4],
-            ["task-error", 4],
-            ["task-remove", 4],
+            ["task-end", 7], // after task 3 is over, task 7 (prepend) will start and end instantly (because it's sync)
+            ["task-success", 7],
+            ["task-remove", 7],
             ["queue-size", 4],
 
             ["task-start", 8], // async
 
-            ["task-end", 7],
-            ["task-success", 7],
-            ["task-remove", 7],
+            ["task-end", 4],
+            ["task-error", 4],
+            ["task-remove", 4],
             ["queue-size", 3],
 
             ["task-start", 5],
@@ -786,6 +785,60 @@ describe("Queue", () => {
         await taskInstance.promise;
 
         (() => q.remove(taskInstance)).must.throw("Task not found in queue");
+
+        q.destroy();
+    });
+
+    it("allows to listen for event once", () => {
+        const q = new Queue();
+
+        let c;
+        c = 0;
+
+        q.addEventListenerOnce("task-add", () => {
+            c++;
+        });
+
+        q.add(noop);
+        q.add(noop);
+
+        c.must.equal(1);
+
+        q.destroy();
+    });
+
+    it("returns unsubscribe method on event register", () => {
+        const q = new Queue();
+
+        let c, d;
+        c = 0;
+        d = 0;
+
+        const unsubscribe = q.addEventListener("task-add", () => {
+            c++;
+            unsubscribe();
+        });
+
+        const unsubcribeOnce = q.addEventListenerOnce("task-add", () => {
+            d++;
+        });
+        unsubcribeOnce();
+
+        q.add(noop);
+        q.add(noop);
+
+        c.must.equal(1);
+        d.must.equal(0);
+
+        q.destroy();
+    });
+
+    it("provides aliases for event listening", () => {
+        const q = new Queue();
+
+        q.on.must.equal(q.addEventListener);
+        q.off.must.equal(q.removeEventListener);
+        q.once.must.equal(q.addEventListenerOnce);
 
         q.destroy();
     });
