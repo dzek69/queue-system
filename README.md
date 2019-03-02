@@ -2,7 +2,7 @@
 
 JavaScript tasks queuing system.
 
-Currently it should be treated as undocumented library for personal use. API may change.
+Currently it should be treated as undocumented library for personal use. API ~~may~~ will change.
 
 ## Features
 
@@ -16,17 +16,30 @@ Currently it should be treated as undocumented library for personal use. API may
 - has simple api
 - is fully unit tested
 
-## To be done
+## To be done / roadmap
 
-- get queue position
+> Target version may change.
+
+### 1.1
+- get queue position of a task
 - notify on queue position change
+
+### 1.2
 - option to cancel ongoing tasks on destroy
+
+### 1.3
 - documentation with a lot of examples
+
+### 1.4
 - add "is finished" to task (successfully resolved)
 - distinguish tasks status between "is requested to cancel" and "is cancelled" (not doing anything anymore)
+
+### 2.0
 - better api to force start task (should not require argument)
-- retries support? move to end of the queue before retry? do nothing until retry timeout passes?
 - massive code cleanup? 
+
+### ?
+- retries support? move to end of the queue before retry? do nothing until retry timeout passes?
 
 ## License
 
