@@ -32,11 +32,15 @@ class Task {
         this.cancel = this.cancel.bind(this);
     }
 
-    isCancelled() {
+    _isCancelled() {
         if (this._cancelled) {
             return Promise.reject(this._cancelError);
         }
         return Promise.resolve();
+    }
+
+    isCancelled() {
+        return this._cancelled;
     }
 
     cancel() {
@@ -59,7 +63,7 @@ class Task {
 
         this._started = true;
 
-        return this._fn(this.isCancelled.bind(this), this._cancelPromise).then(this._resolve, this._reject);
+        return this._fn(this._isCancelled.bind(this), this._cancelPromise).then(this._resolve, this._reject);
     }
 
     remove() {

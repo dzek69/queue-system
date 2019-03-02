@@ -18,14 +18,14 @@ Currently it should be treated as undocumented library for personal use. API may
 
 ## To be done
 
-- add tasks additional data beside id
-- filter tasks by predictate
+- remove task that is canelled before start [!]
 - cancel tasks by predictate
 - get queue position
 - notify on queue position change
 - option to cancel ongoing tasks on destroy
 - documentation with a lot of examples
-- remove task that is canelled before start
+- add "is finished" to task (successfully resolved)
+- distinguish tasks status between "is requested to cancel" and "is cancelled" (not doing anything anymore)
 - better api to force start task (should not require argument)
 - retries support? move to end of the queue before retry? do nothing until retry timeout passes? 
 

@@ -39,6 +39,13 @@ const isPromiseLike = (object) => {
  */
 
 /**
+ * @typedef {function} QueueFilterFunction
+ * @param {*} data - task related data
+ * @param {boolean} isRunning - is the task running
+ * @param {boolean} isCancelled - is the task cancelled
+ */
+
+/**
  * Defines a queue of tasks
  */
 class Queue {
@@ -108,7 +115,7 @@ class Queue {
         return this._runningTasks.length < this._concurrency;
     }
 
-    _createTask(taskFn) {
+    _createTask(taskFn, data) {
         const check = () => {
             return this._isConcurrencySlotFree();
         };
@@ -149,6 +156,7 @@ class Queue {
         }
         /* eslint-enable no-use-before-define */
         const task = new Task(this, run, check);
+        task.data = data;
         return task;
     }
 
@@ -195,11 +203,12 @@ class Queue {
     /**
      * Adds a task to the queue.
      * @param {function} taskFn - task function
+     * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
      */
-    add(taskFn) {
+    add(taskFn, data) {
         this._destroyedCheck();
-        const task = this._createTask(taskFn);
+        const task = this._createTask(taskFn, data);
         this._tasks.push(task);
         this._ee.emit("task-add", task);
         this._ee.emit("queue-size", this.getQueueSize());
@@ -211,11 +220,12 @@ class Queue {
      * Adds a task to beginning of the queue.
      * Adds a task to the queue.
      * @param {function} taskFn - task function
+     * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
      */
-    prepend(taskFn) {
+    prepend(taskFn, data) {
         this._destroyedCheck();
-        const task = this._createTask(taskFn);
+        const task = this._createTask(taskFn, data);
         this._tasks.unshift(task);
         this._ee.emit("task-add", task);
         this._ee.emit("queue-size", this.getQueueSize());
@@ -229,11 +239,12 @@ class Queue {
      * @param {number} index - task position in the queue (starting from 0). Keep in mind that ongoing tasks are kept
      * in this list, ie: with concurrency of 2 adding task to index 2 will mean this task will be first to run, not
      * third.
+     * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
      */
-    insertAt(taskFn, index) {
+    insertAt(taskFn, index, data) {
         this._destroyedCheck();
-        const task = this._createTask(taskFn);
+        const task = this._createTask(taskFn, data);
         this._tasks.splice(index, 0, task);
         this._ee.emit("task-add", task);
         this._ee.emit("queue-size", this.getQueueSize());
@@ -271,6 +282,27 @@ class Queue {
      */
     getQueueSize() {
         return this._tasks.length;
+    }
+
+    /**
+     * Returns current tasks (ongoing and waiting)
+     * @returns {Array<Task>}
+     */
+    getTasks() {
+        return [...this._tasks];
+    }
+
+    /**
+     * Returns tasks by filtering function
+     * @param {QueueFilterFunction} fn - filtering function
+     * @returns {Array<Task>}
+     */
+    filter(fn) {
+        return this._tasks.filter(task => {
+            const isRunning = this._runningTasks.includes(task);
+            const isCancelled = task.isCancelled();
+            return fn(task.data, isRunning, isCancelled);
+        });
     }
 }
 

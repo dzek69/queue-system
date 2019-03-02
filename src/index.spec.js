@@ -944,4 +944,99 @@ describe("Queue", () => {
 
         results.must.have.length(1);
     });
+
+    it("has method to get list of tasks that is safe to modify", async () => {
+        const q = new Queue();
+
+        const results = [];
+
+        const task = async (isCancelled) => {
+            await isCancelled();
+            results.push(1);
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        const task1 = q.add(task);
+        const task2 = q.add(task);
+
+        const tasks = q.getTasks();
+        tasks.must.eql([
+            task1,
+            task2,
+        ]);
+
+        tasks.length = 1;
+        tasks.must.eql([
+            task1,
+        ]);
+
+        await new Promise(resolve => setTimeout(resolve, 150));
+
+        // if returned array was internal array of queue this would stop task2 from running
+        results.must.have.length(2);
+
+        q.destroy();
+    });
+
+    it("allows to add custom data to tasks", () => {
+        const q = new Queue();
+
+        const task = async () => {};
+
+        const task1 = q.add(task, { x: 5 });
+        task1.data.must.eql({ x: 5 });
+
+        const task2 = q.add(task);
+        task2.must.have.property("data");
+        (task2.data === undefined).must.be.true();
+
+        q.destroy();
+    });
+
+    it("allows to filter tasks", async () => {
+        const q = new Queue();
+
+        const task = async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        const task1 = q.add(task, { x: 5 });
+        const task2 = q.add(task);
+        const task3 = q.add(task);
+
+        const calls = [];
+
+        const filteringFn = (...args) => {
+            calls.push(args);
+            return args[1] === true;
+        };
+
+        task3.cancel();
+
+        const list = q.filter(filteringFn);
+        list.must.eql([
+            task1,
+        ]);
+
+        calls.must.eql([
+            [{ x: 5 }, true, false],
+            [undefined, false, false],
+            [undefined, false, true],
+        ]);
+
+        await task2.promise;
+
+        calls.length = 0;
+
+        const nextList = q.filter(filteringFn);
+        nextList.must.eql([
+            task3,
+        ]);
+
+        calls.must.eql([
+            [undefined, true, true],
+        ]);
+
+        q.destroy();
+    });
 });
