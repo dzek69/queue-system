@@ -5,11 +5,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- jsdoc documentation for some methods
+- jsdoc documentation
 - blocking task running if task belongs to instance of queue that is destroyed
 - passing related data when adding tasks, used to filter tasks
 - possibility to get all tasks from queue
 - possibility to filter tasks from queue
+- exported EVENTS object with list of supported events
 ### Changed
 - transpiling options, now transpiled code is for environments used by at least 3% of people
 ### Fixed

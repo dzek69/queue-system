@@ -12,16 +12,23 @@ const remove = (array, searchItem) => {
     array.splice(index, 1);
 };
 
-const knownEvents = [
-    "task-add",
-    "task-remove",
-    "task-start",
-    "task-end",
-    "task-success",
-    "task-error",
-    "task-thrown",
-    "queue-size",
-];
+/**
+ * @typedef {string} EventName
+ */
+// @todo add typedef for events list and use it on EVENTS object
+
+const EVENTS = {
+    TASK_ADD: "task-add",
+    TASK_REMOVE: "task-remove",
+    TASK_START: "task-start",
+    TASK_END: "task-end",
+    TASK_SUCCESS: "task-success",
+    TASK_ERROR: "task-error",
+    TASK_THROWN: "task-thrown",
+    QUEUE_SIZE: "queue-size",
+};
+
+const knownEvents = Object.values(EVENTS);
 
 const isPromiseLike = (object) => {
     return object && typeof object.then === "function" && typeof object.catch === "function";
@@ -46,7 +53,7 @@ const isPromiseLike = (object) => {
  */
 
 /**
- * Defines a queue of tasks
+ * @class Queue
  */
 class Queue {
     /**
@@ -121,12 +128,12 @@ class Queue {
         };
         /* eslint-disable no-use-before-define */
         const run = (isCancelled, cancelPromise) => {
-            this._ee.emit("task-start", task);
+            this._ee.emit(EVENTS.TASK_START, task);
             this._runningTasks.push(task);
 
             const end = (event) => {
-                this._ee.emit("task-end", task);
-                this._ee.emit("task-" + event, task);
+                this._ee.emit(EVENTS.TASK_END, task);
+                this._ee.emit("task-" + event, task); // @todo fix to avoid event name concatenation
                 this._remove(task);
                 this._removeRunning(task);
                 this._runNext();
@@ -160,6 +167,14 @@ class Queue {
         return task;
     }
 
+    /**
+     * Adds specified queue event listener.
+     * @alias on
+     * @param {EventName} eventName - event name
+     * @param {function} fn - listener
+     * @returns {function} - unsubscribe function, call it to remove event listener
+     * @throws Error - when queue is destroyed or unknown event name is given
+     */
     addEventListener(eventName, fn) {
         this._destroyedCheck();
         if (!knownEvents.includes(eventName)) {
@@ -171,6 +186,14 @@ class Queue {
         };
     }
 
+    /**
+     * Adds specified queue event listener that will be called only on first occurrence of event after adding.
+     * @alias once
+     * @param {EventName} eventName - event name
+     * @param {function} fn - listener
+     * @returns {function} - unsubscribe function, call it to remove event listener
+     * @throws Error - when queue is destroyed or unknown event name is given
+     */
     addEventListenerOnce(eventName, fn) {
         this._destroyedCheck();
         if (!knownEvents.includes(eventName)) {
@@ -182,6 +205,13 @@ class Queue {
         };
     }
 
+    /**
+     * Removes specified queue event listener.
+     * @alias off
+     * @param {EventName} eventName - event name
+     * @param {function} fn - listener
+     * @throws Error - when queue is destroyed or unknown event name is given
+     */
     removeEventListener(eventName, fn) {
         this._destroyedCheck();
         if (!knownEvents.includes(eventName)) {
@@ -202,33 +232,36 @@ class Queue {
 
     /**
      * Adds a task to the queue.
+     * @alias push
      * @param {function} taskFn - task function
      * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
+     * @throws Error - when queue is destroyed
      */
     add(taskFn, data) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.push(task);
-        this._ee.emit("task-add", task);
-        this._ee.emit("queue-size", this.getQueueSize());
+        this._ee.emit(EVENTS.TASK_ADD, task);
+        this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
         this._runNext();
         return task;
     }
 
     /**
      * Adds a task to beginning of the queue.
-     * Adds a task to the queue.
+     * @alias unshift
      * @param {function} taskFn - task function
      * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
+     * @throws Error - when queue is destroyed
      */
     prepend(taskFn, data) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.unshift(task);
-        this._ee.emit("task-add", task);
-        this._ee.emit("queue-size", this.getQueueSize());
+        this._ee.emit(EVENTS.TASK_ADD, task);
+        this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
         this._runNext();
         return task;
     }
@@ -241,13 +274,14 @@ class Queue {
      * third.
      * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
+     * @throws Error - when queue is destroyed
      */
     insertAt(taskFn, index, data) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.splice(index, 0, task);
-        this._ee.emit("task-add", task);
-        this._ee.emit("queue-size", this.getQueueSize());
+        this._ee.emit(EVENTS.TASK_ADD, task);
+        this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
         this._runNext();
         return task;
     }
@@ -255,7 +289,7 @@ class Queue {
     /**
      * Removes queue from task. This won't cancel ongoing task.
      * @param {Task} task
-     * @throws {Error} - when task isn't in the queue
+     * @throws {Error} - when task isn't in the queue or queue is destroyed
      */
     remove(task) {
         this._destroyedCheck();
@@ -268,8 +302,8 @@ class Queue {
         if (this._tasks.length === lengthBefore) {
             throw new Error("Task not found in queue");
         }
-        this._ee.emit("task-remove", task);
-        this._ee.emit("queue-size", this.getQueueSize());
+        this._ee.emit(EVENTS.TASK_REMOVE, task);
+        this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
     }
 
     _removeRunning(task) {
@@ -285,7 +319,7 @@ class Queue {
     }
 
     /**
-     * Returns current tasks (ongoing and waiting)
+     * Returns current tasks (ongoing and waiting).
      * @returns {Array<Task>}
      */
     getTasks() {
@@ -293,7 +327,7 @@ class Queue {
     }
 
     /**
-     * Returns tasks by filtering function
+     * Returns tasks by filtering function.
      * @param {QueueFilterFunction} fn - filtering function
      * @returns {Array<Task>}
      */
@@ -307,3 +341,7 @@ class Queue {
 }
 
 export default Queue;
+export {
+    EVENTS,
+};
+
