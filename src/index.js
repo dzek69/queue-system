@@ -27,7 +27,24 @@ const isPromiseLike = (object) => {
     return object && typeof object.then === "function" && typeof object.catch === "function";
 };
 
+/**
+ * @typedef {Object} QueueOptions
+ * @property {number} concurrency - how many tasks should be executed at once
+ */
+
+/**
+ * @typedef {Object} QueueDestroyInfo
+ * @property {Array<Task>} removed - list of removed tasks, that hadn't had a chance to start
+ * @property {Array<Task>} inProgress - list of ongoing tasks
+ */
+
+/**
+ * Defines a queue of tasks
+ */
 class Queue {
+    /**
+     * @param {QueueOptions} options
+     */
     constructor(options = {}) {
         this._concurrency = options.concurrency || 1;
 
@@ -48,10 +65,16 @@ class Queue {
 
     _destroyedCheck() {
         if (this._destroyed) {
-            throw new Error("This instance is destroyed");
+            throw new Error("This queue is destroyed");
         }
     }
 
+    /**
+     * Destroys queue.
+     * Destroying removes waiting tasks, ongoing tasks are continued. You may manually cancel them.
+     * Destroyed instance won't allow you to do anything with it anymore.
+     * @returns {QueueDestroyInfo} - list of removed and ongoing tasks
+     */
     destroy() {
         this._destroyedCheck();
         this._destroyed = true;
@@ -159,12 +182,21 @@ class Queue {
         this._ee.off(eventName, fn);
     }
 
+    /**
+     * Changes how many tasks may run at once.
+     * @param {number} concurrency - count of tasks to run at once
+     */
     setConcurrency(concurrency) {
         this._destroyedCheck();
         this._concurrency = concurrency;
         this._runNext();
     }
 
+    /**
+     * Adds a task to the queue.
+     * @param {function} taskFn - task function
+     * @returns {Task}
+     */
     add(taskFn) {
         this._destroyedCheck();
         const task = this._createTask(taskFn);
@@ -175,6 +207,12 @@ class Queue {
         return task;
     }
 
+    /**
+     * Adds a task to beginning of the queue.
+     * Adds a task to the queue.
+     * @param {function} taskFn - task function
+     * @returns {Task}
+     */
     prepend(taskFn) {
         this._destroyedCheck();
         const task = this._createTask(taskFn);
@@ -185,6 +223,14 @@ class Queue {
         return task;
     }
 
+    /**
+     * Adds a task to given point of the queue.
+     * @param {function} taskFn - task function
+     * @param {number} index - task position in the queue (starting from 0). Keep in mind that ongoing tasks are kept
+     * in this list, ie: with concurrency of 2 adding task to index 2 will mean this task will be first to run, not
+     * third.
+     * @returns {Task}
+     */
     insertAt(taskFn, index) {
         this._destroyedCheck();
         const task = this._createTask(taskFn);
@@ -195,6 +241,11 @@ class Queue {
         return task;
     }
 
+    /**
+     * Removes queue from task. This won't cancel ongoing task.
+     * @param {Task} task
+     * @throws {Error} - when task isn't in the queue
+     */
     remove(task) {
         this._destroyedCheck();
         this._remove(task);
@@ -214,6 +265,10 @@ class Queue {
         remove(this._runningTasks, task);
     }
 
+    /**
+     * Returns queue size.
+     * @returns {number}
+     */
     getQueueSize() {
         return this._tasks.length;
     }

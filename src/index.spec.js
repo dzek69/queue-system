@@ -865,6 +865,8 @@ describe("Queue", () => {
         await new Promise(resolve => setTimeout(resolve, 200));
 
         caught.must.be.true();
+
+        q.destroy();
     });
 
     it("provides a way to cancel the task and checking for cancel each step", async () => {
@@ -899,9 +901,11 @@ describe("Queue", () => {
         // not instant like in previous example, we need to give time for task to become aware that cancelling happened
 
         caught.must.be.true();
+
+        q.destroy();
     });
 
-    it("disallow starting a task twice", async () => {
+    it("disallows starting a task twice", async () => {
         const q = new Queue();
 
         const task = async () => {
@@ -912,5 +916,32 @@ describe("Queue", () => {
         (() => myTask.start(true)).must.throw("Task already started.");
 
         await myTask.promise;
+
+        q.destroy();
+    });
+
+    it("disallows starting a task from a destroyed queue", async () => {
+        const q = new Queue();
+
+        const results = [];
+
+        const task = async (isCancelled) => {
+            await isCancelled();
+            results.push(1);
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        q.add(task);
+        const myTask2 = q.add(task);
+
+        q.destroy();
+
+        await new Promise(resolve => setTimeout(resolve, 150));
+
+        // task 2 didn't had a chance to start
+
+        (() => myTask2.start()).must.throw("Task belongs to destroyed queue.");
+
+        results.must.have.length(1);
     });
 });

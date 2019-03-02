@@ -53,6 +53,9 @@ class Task {
         if (this._started) {
             throw new Error("Task already started.");
         }
+        if (this._queue._destroyed) {
+            throw new Error("Task belongs to destroyed queue.");
+        }
 
         this._started = true;
 

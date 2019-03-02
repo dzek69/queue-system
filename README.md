@@ -19,7 +19,11 @@ Currently it should be treated as undocumented library for personal use. API may
 ## To be done
 
 - add tasks additional data beside id
+- filter tasks by predictate
 - cancel tasks by predictate
+- get queue position
+- notify on queue position change
+- option to cancel ongoing tasks on destroy
 - documentation with a lot of examples
 - remove task that is canelled before start
 - better api to force start task (should not require argument)
