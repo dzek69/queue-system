@@ -900,4 +900,17 @@ describe("Queue", () => {
 
         caught.must.be.true();
     });
+
+    it("disallow starting a task twice", async () => {
+        const q = new Queue();
+
+        const task = async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        const myTask = q.add(task);
+        (() => myTask.start(true)).must.throw("Task already started.");
+
+        await myTask.promise;
+    });
 });
