@@ -18,7 +18,6 @@ Currently it should be treated as undocumented library for personal use. API may
 
 ## To be done
 
-- cancel tasks by predictate
 - get queue position
 - notify on queue position change
 - option to cancel ongoing tasks on destroy
@@ -26,7 +25,8 @@ Currently it should be treated as undocumented library for personal use. API may
 - add "is finished" to task (successfully resolved)
 - distinguish tasks status between "is requested to cancel" and "is cancelled" (not doing anything anymore)
 - better api to force start task (should not require argument)
-- retries support? move to end of the queue before retry? do nothing until retry timeout passes? 
+- retries support? move to end of the queue before retry? do nothing until retry timeout passes?
+- massive code cleanup? 
 
 ## License
 

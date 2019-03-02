@@ -1059,4 +1059,42 @@ describe("Queue", () => {
 
         q.destroy();
     });
+
+    it("allows to cancel tasks by predicate", () => {
+        const q = new Queue();
+
+        const task = async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        const task1 = q.add(task, { cancelMe: true });
+        const task2 = q.add(task, { cancelMe: false });
+        const task3 = q.add(task);
+        const task4 = q.add(task, { cancelMe: true });
+        const task5 = q.add(task, { cancelMe: false });
+        const task6 = q.add(task);
+
+        const filteringFn = (data = {}) => {
+            return Boolean(data.cancelMe);
+        };
+
+        const cancelledList = q.cancelBy(filteringFn);
+
+        cancelledList.must.eql([
+            task1,
+            task4,
+        ]);
+
+        const inQueue = q.getTasks();
+
+        inQueue.must.eql([
+            task1, // 1 is in progress so it must stay here until done
+            task2,
+            task3,
+            task5,
+            task6,
+        ]);
+
+        q.destroy();
+    });
 });

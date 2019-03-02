@@ -338,6 +338,17 @@ class Queue {
             return fn(task.data, isRunning, isCancelled);
         });
     }
+
+    /**
+     * Cancels tasks by predicate
+     * @param {QueueFilterFunction} fn - filtering function
+     * @returns {Array<Task>} - cancelled tasks
+     */
+    cancelBy(fn) {
+        const tasks = this.filter(fn);
+        tasks.forEach(task => task.cancel());
+        return tasks;
+    }
 }
 
 export default Queue;

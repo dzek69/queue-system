@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - possibility to get all tasks from queue
 - possibility to filter tasks from queue
 - exported EVENTS object with list of supported events
+- cancelling group of tasks by predicate
 ### Changed
 - transpiling options, now transpiled code is for environments used by at least 3% of people
 ### Fixed
