@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - jsdoc documentation for some methods
 - blocking task running if task belongs to instance of queue that is destroyed
+### Changed
+- transpiling options, now transpiled code is for environments used by at least 3% of people
 
 ## [1.0.2] 2018-11-25
 ### Fixed
