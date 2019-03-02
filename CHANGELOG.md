@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - possibility to filter tasks from queue
 ### Changed
 - transpiling options, now transpiled code is for environments used by at least 3% of people
+### Fixed
+- task method was getting executed even if was cancelled before starting
 
 ## [1.0.2] 2018-11-25
 ### Fixed

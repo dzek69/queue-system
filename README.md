@@ -18,7 +18,6 @@ Currently it should be treated as undocumented library for personal use. API may
 
 ## To be done
 
-- remove task that is canelled before start [!]
 - cancel tasks by predictate
 - get queue position
 - notify on queue position change

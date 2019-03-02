@@ -764,15 +764,15 @@ describe("Queue", () => {
 
         q.destroy();
 
-        (() => q.destroy()).must.throw("This instance is destroyed");
-        (() => q.addEventListener()).must.throw("This instance is destroyed");
-        (() => q.removeEventListener()).must.throw("This instance is destroyed");
-        (() => q.setConcurrency()).must.throw("This instance is destroyed");
-        (() => q.add()).must.throw("This instance is destroyed");
-        (() => q.push()).must.throw("This instance is destroyed");
-        (() => q.prepend()).must.throw("This instance is destroyed");
-        (() => q.unshift()).must.throw("This instance is destroyed");
-        (() => q.remove()).must.throw("This instance is destroyed");
+        (() => q.destroy()).must.throw("This queue is destroyed");
+        (() => q.addEventListener()).must.throw("This queue is destroyed");
+        (() => q.removeEventListener()).must.throw("This queue is destroyed");
+        (() => q.setConcurrency()).must.throw("This queue is destroyed");
+        (() => q.add()).must.throw("This queue is destroyed");
+        (() => q.push()).must.throw("This queue is destroyed");
+        (() => q.prepend()).must.throw("This queue is destroyed");
+        (() => q.unshift()).must.throw("This queue is destroyed");
+        (() => q.remove()).must.throw("This queue is destroyed");
 
         q.getQueueSize().must.equal(0);
     });
@@ -978,6 +978,31 @@ describe("Queue", () => {
         q.destroy();
     });
 
+    it("removes cancelled tasks from queue, so their method is never called", () => {
+        const q = new Queue();
+
+        const results = [];
+
+        const task = async () => {
+            // without explicit check for cancelling this would (and was previously) be executed anyway
+            results.push(1);
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        const task1 = q.add(task);
+        const task2 = q.add(task);
+
+        task1.cancel();
+        task2.cancel();
+
+        const tasks = q.getTasks();
+        tasks.must.eql([
+            task1,
+        ]);
+
+        q.destroy();
+    });
+
     it("allows to add custom data to tasks", () => {
         const q = new Queue();
 
@@ -1021,7 +1046,6 @@ describe("Queue", () => {
         calls.must.eql([
             [{ x: 5 }, true, false],
             [undefined, false, false],
-            [undefined, false, true],
         ]);
 
         await task2.promise;
@@ -1029,13 +1053,9 @@ describe("Queue", () => {
         calls.length = 0;
 
         const nextList = q.filter(filteringFn);
-        nextList.must.eql([
-            task3,
-        ]);
+        nextList.must.eql([]);
 
-        calls.must.eql([
-            [undefined, true, true],
-        ]);
+        calls.must.eql([]);
 
         q.destroy();
     });

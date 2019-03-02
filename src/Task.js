@@ -47,6 +47,9 @@ class Task {
         if (!this._cancelled) {
             this._cancelled = true;
             this._cancelReject(new Error("Task cancelled"));
+            if (!this._started) {
+                this.remove();
+            }
         }
     }
 
