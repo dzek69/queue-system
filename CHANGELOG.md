@@ -4,6 +4,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+(nothing yet)
+
+## [1.1.0]
 ### Added
 - jsdoc documentation
 - blocking task running if task belongs to instance of queue that is destroyed
@@ -14,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - cancelling group of tasks by predicate
 - ability to get task position in the queue
 - ability to check if task is currently running
+- event emitting queue order when 
 ### Changed
 - transpiling options, now transpiled code is for environments used by at least 3% of people
 ### Fixed

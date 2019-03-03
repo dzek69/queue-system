@@ -20,11 +20,9 @@ Currently it should be treated as undocumented library for personal use. API ~~m
 
 > Target version may change.
 
-### 1.1
-- notify on queue position change
-
 ### 1.2
 - option to cancel ongoing tasks on destroy
+- task itself should have queue position event to listen on
 
 ### 1.3
 - documentation with a lot of examples

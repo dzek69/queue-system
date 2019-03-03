@@ -1,4 +1,4 @@
-import Queue from "./index";
+import Queue, { EVENTS } from "./index";
 
 const noop = () => {}; // eslint-disable-line no-empty-function
 
@@ -1145,6 +1145,59 @@ describe("Queue", () => {
 
         q.isTaskRunning(task1).must.be.false();
         task1.isRunning().must.be.false();
+
+        q.destroy();
+    });
+
+    it("emits queue order when somethings change", async () => {
+        const q = new Queue();
+
+        const calls = [];
+
+        const handleOrder = (...args) => {
+            calls.push(args);
+        };
+        q.on(EVENTS.QUEUE_ORDER, handleOrder);
+
+        const task = async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        const task1 = q.add(task);
+        calls.must.have.length(1);
+        calls[0].must.eql(
+            [[task1]],
+        );
+
+        const task2 = q.add(task);
+        calls.must.have.length(2);
+        calls[1].must.eql(
+            [[task1, task2]],
+        );
+
+        const task3 = q.prepend(task);
+        calls.must.have.length(3);
+        calls[2].must.eql(
+            [[task3, task1, task2]],
+        );
+
+        const task4 = q.insertAt(task, 2);
+        calls.must.have.length(4);
+        calls[3].must.eql(
+            [[task3, task1, task4, task2]],
+        );
+
+        task4.remove();
+        calls.must.have.length(5);
+        calls[4].must.eql(
+            [[task3, task1, task2]],
+        );
+
+        await task1.promise;
+        calls.must.have.length(6);
+        calls[5].must.eql(
+            [[task3, task2]],
+        );
 
         q.destroy();
     });

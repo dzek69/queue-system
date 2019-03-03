@@ -1,5 +1,5 @@
+import EventEmitter from "eventemitter3"; // eslint-disable-line max-lines
 import Task from "./Task";
-import EventEmitter from "eventemitter3";
 
 const NOT_FOUND = -1;
 
@@ -26,6 +26,7 @@ const EVENTS = {
     TASK_ERROR: "task-error",
     TASK_THROWN: "task-thrown",
     QUEUE_SIZE: "queue-size",
+    QUEUE_ORDER: "queue-order",
 };
 
 const knownEvents = Object.values(EVENTS);
@@ -244,6 +245,7 @@ class Queue {
         this._tasks.push(task);
         this._ee.emit(EVENTS.TASK_ADD, task);
         this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
+        this._ee.emit(EVENTS.QUEUE_ORDER, this.getTasks());
         this._runNext();
         return task;
     }
@@ -262,6 +264,7 @@ class Queue {
         this._tasks.unshift(task);
         this._ee.emit(EVENTS.TASK_ADD, task);
         this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
+        this._ee.emit(EVENTS.QUEUE_ORDER, this.getTasks());
         this._runNext();
         return task;
     }
@@ -282,6 +285,7 @@ class Queue {
         this._tasks.splice(index, 0, task);
         this._ee.emit(EVENTS.TASK_ADD, task);
         this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
+        this._ee.emit(EVENTS.QUEUE_ORDER, this.getTasks());
         this._runNext();
         return task;
     }
@@ -304,6 +308,7 @@ class Queue {
         }
         this._ee.emit(EVENTS.TASK_REMOVE, task);
         this._ee.emit(EVENTS.QUEUE_SIZE, this.getQueueSize());
+        this._ee.emit(EVENTS.QUEUE_ORDER, this.getTasks());
     }
 
     _removeRunning(task) {
