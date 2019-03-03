@@ -100,6 +100,22 @@ class Task {
     remove() {
         this._queue.remove(this);
     }
+
+    /**
+     * Gets task position in the queue.
+     * @returns {number} task index or -1 if not found in the queue
+     */
+    getPosition() {
+        return this._queue.getTaskPosition(this);
+    }
+
+    /**
+     * Checks if task is currently running.
+     * @returns {boolean} - true if task is running, false otherwise
+     */
+    isRunning() {
+        return this._queue.isTaskRunning(this);
+    }
 }
 
 export default Task;

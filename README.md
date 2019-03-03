@@ -21,7 +21,6 @@ Currently it should be treated as undocumented library for personal use. API ~~m
 > Target version may change.
 
 ### 1.1
-- get queue position of a task
 - notify on queue position change
 
 ### 1.2

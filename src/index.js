@@ -96,7 +96,7 @@ class Queue {
         this._ee.removeAllListeners();
 
         const tasksToRemove = this._tasks.filter((task) => {
-            return !this._runningTasks.includes(task);
+            return !this.isTaskRunning(task);
         });
         tasksToRemove.forEach(task => this._remove(task));
 
@@ -108,7 +108,7 @@ class Queue {
 
     _runNext() {
         const taskToRun = this._tasks.find((task) => {
-            return !this._runningTasks.includes(task);
+            return !this.isTaskRunning(task);
         });
         if (taskToRun) {
             taskToRun.run();
@@ -333,7 +333,7 @@ class Queue {
      */
     filter(fn) {
         return this._tasks.filter(task => {
-            const isRunning = this._runningTasks.includes(task);
+            const isRunning = this.isTaskRunning(task);
             const isCancelled = task.isCancelled();
             return fn(task.data, isRunning, isCancelled);
         });
@@ -348,6 +348,24 @@ class Queue {
         const tasks = this.filter(fn);
         tasks.forEach(task => task.cancel());
         return tasks;
+    }
+
+    /**
+     * Returns given task position in the queue.
+     * @param {Task} task - task to look for
+     * @returns {number} - task index or -1 if not found
+     */
+    getTaskPosition(task) {
+        return this._tasks.findIndex(t => t === task);
+    }
+
+    /**
+     * Is given task running?
+     * @param {Task} task - task to check
+     * @returns {boolean} - true if task is running, false otherwise
+     */
+    isTaskRunning(task) {
+        return this._runningTasks.includes(task);
     }
 }
 

@@ -1097,4 +1097,55 @@ describe("Queue", () => {
 
         q.destroy();
     });
+
+    it("allows to get task position in the queue", async () => {
+        const q = new Queue();
+
+        const task = async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        q.add(task);
+        const task2 = q.add(task);
+        q.add(task);
+        const task4 = q.add(task);
+        q.add(task);
+
+        q.getTaskPosition(task4).must.equal(3); // position starts on 0
+        task4.getPosition().must.equal(3);
+
+        await task2.promise;
+
+        q.getTaskPosition(task4).must.equal(1);
+        task4.getPosition().must.equal(1);
+
+        q.destroy();
+    });
+
+    it("allows you to check if task is running", async () => {
+        const q = new Queue();
+
+        const task = async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        const task1 = q.add(task);
+        const task2 = q.add(task);
+
+        q.isTaskRunning(task1).must.be.true();
+        task1.isRunning().must.be.true();
+
+        q.isTaskRunning(task2).must.be.false();
+        task2.isRunning().must.be.false();
+
+        await task1.promise;
+
+        q.isTaskRunning(task2).must.be.true();
+        task2.isRunning().must.be.true();
+
+        q.isTaskRunning(task1).must.be.false();
+        task1.isRunning().must.be.false();
+
+        q.destroy();
+    });
 });
