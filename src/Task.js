@@ -3,15 +3,13 @@ id = 1;
 
 const noop = () => {}; // eslint-disable-line no-empty-function
 
-/**
- * @class Task
- */
 class Task {
     /**
      * Tasks instances should only be created by Queue instance. Do not use directly.
      * @param {Queue} queue - queue instance
      * @param {function} fn - task function
      * @param {function} check - function that verifies if task can be started
+     * @class Task
      */
     constructor(queue, fn, check) {
         this._queue = queue;
@@ -73,7 +71,6 @@ class Task {
     /**
      * Starts task.
      * @param {boolean} force - force start immediately
-     * @alias start
      * @returns {void|Promise}
      * @throws Error - when task is already started or task belongs to queue that is destroyed
      */
@@ -95,7 +92,7 @@ class Task {
 
     /**
      * Removes task from list without cancelling it.
-     * @deprecated - use cancel instead
+     * @deprecated use cancel instead
      */
     remove() {
         this._queue.remove(this);

@@ -4,7 +4,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-(nothing yet)
+### Fixed
+- jsdoc documentation
+### Added
+- documentation tutorials
 
 ## [1.1.0]
 ### Added
@@ -18,18 +21,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - ability to get task position in the queue
 - ability to check if task is currently running
 - event emitting queue order when 
+
 ### Changed
 - transpiling options, now transpiled code is for environments used by at least 3% of people
+
 ### Fixed
 - task method was getting executed even if was cancelled before starting
 
 ## [1.0.2] 2018-11-25
 ### Fixed
 - sync tasks support
+
 ### Added
 - aliases for event (un)registering
 - "once" event
 - cancelling task support
+
 ### Changed
 - README updated to contain basic info about what this library is, current features and expected "todo" features
 

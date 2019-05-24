@@ -53,12 +53,10 @@ const isPromiseLike = (object) => {
  * @param {boolean} isCancelled - is the task cancelled
  */
 
-/**
- * @class Queue
- */
 class Queue {
     /**
      * @param {QueueOptions} options
+     * @class Queue
      */
     constructor(options = {}) {
         this._concurrency = options.concurrency || 1;
@@ -170,7 +168,6 @@ class Queue {
 
     /**
      * Adds specified queue event listener.
-     * @alias on
      * @param {EventName} eventName - event name
      * @param {function} fn - listener
      * @returns {function} - unsubscribe function, call it to remove event listener
@@ -189,7 +186,6 @@ class Queue {
 
     /**
      * Adds specified queue event listener that will be called only on first occurrence of event after adding.
-     * @alias once
      * @param {EventName} eventName - event name
      * @param {function} fn - listener
      * @returns {function} - unsubscribe function, call it to remove event listener
@@ -208,7 +204,6 @@ class Queue {
 
     /**
      * Removes specified queue event listener.
-     * @alias off
      * @param {EventName} eventName - event name
      * @param {function} fn - listener
      * @throws Error - when queue is destroyed or unknown event name is given
@@ -233,7 +228,6 @@ class Queue {
 
     /**
      * Adds a task to the queue.
-     * @alias push
      * @param {function} taskFn - task function
      * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
@@ -252,7 +246,6 @@ class Queue {
 
     /**
      * Adds a task to beginning of the queue.
-     * @alias unshift
      * @param {function} taskFn - task function
      * @param {*} [data] - data related to task, used for filtering tasks in the queue
      * @returns {Task}
