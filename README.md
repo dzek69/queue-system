@@ -25,7 +25,7 @@ Currently it should be treated as undocumented library for personal use. API ~~m
 - task itself should have queue position event to listen on
 
 ### 1.3
-- documentation with a lot of examples
+- a lot of examples in documentation
 
 ### 1.4
 - add "is finished" to task (successfully resolved)

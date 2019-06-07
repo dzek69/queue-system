@@ -4,12 +4,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- nothing yet
+
+## [1.1.1] - 2019-06-07
 ### Fixed
 - jsdoc documentation
+- audit warnings
 ### Added
 - documentation tutorials
 
-## [1.1.0]
+## [1.1.0] - 2019-03-03
 ### Added
 - jsdoc documentation
 - blocking task running if task belongs to instance of queue that is destroyed
