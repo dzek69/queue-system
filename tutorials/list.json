@@ -1,0 +1,17 @@
+{
+    "01basic": {
+        "title": "Basic Usage"
+    },
+    "02advanced": {
+        "title": "Advanced Usage"
+    },
+    "03events": {
+        "title": "Queue events"
+    },
+    "04cancelling": {
+        "title": "Cancelling ongoing tasks"
+    },
+    "CHANGELOG": {
+        "title": "CHANGELOG"
+    }
+}

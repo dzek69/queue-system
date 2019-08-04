@@ -4,7 +4,7 @@ const listener = () => {};
 q.addEventListener("event name", listener);
 ```
 
-To remove a listener call the function returned from `addEventListener` or use `removeListener`:
+To remove a listener call the function returned from `addEventListener` or use `removeEventListener`:
 ```javascript
 const listener = () => {};
 const unregister = q.addEventListener("event name", listener);
@@ -26,6 +26,14 @@ q.addEventListenerOnce("event name", listener);
 You can remove `once` listeners the same way as standard listener.
 
 When a queue is destroyed - all listeners are removed automatically.
+
+### Aliases
+
+You can use aliases for adding/removing events:
+
+- `on` ➡ `addEventListener`
+- `off` ➡ `removeEventListener`
+- `once` ➡ `addEventListenerOnce`
 
 ## Events list
 

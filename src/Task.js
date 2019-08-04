@@ -75,6 +75,9 @@ class Task {
      * @throws Error - when task is already started or task belongs to queue that is destroyed
      */
     run(force) {
+        if (this._cancelled) {
+            throw new Error("Task was cancelled.");
+        }
         if (!force && !this._check()) {
             return;
         }

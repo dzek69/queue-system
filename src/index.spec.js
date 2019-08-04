@@ -1201,4 +1201,57 @@ describe("Queue", () => {
 
         q.destroy();
     });
+
+    it("disallows to force-start cancelled task", async () => {
+        const q = new Queue();
+
+        let runs = 0;
+        const task = async () => {
+            runs++;
+            await new Promise(resolve => setTimeout(resolve, 200));
+        };
+
+        const task1 = q.add(task);
+        const task2 = q.add(task);
+
+        task2.cancel();
+
+        q.getTasks().length.must.equal(1);
+
+        await task1.promise;
+
+        q.getTasks().length.must.equal(0);
+        runs.must.equal(1);
+
+        (() => task2.run(true)).must.throw("Task was cancelled.");
+        runs.must.equal(1);
+
+        q.destroy();
+    });
+
+    it("allows to catch errors on synchronous task that's added into having-free-slots queue to prevents `Unhandled "
+        + "Rejection`", async () => {
+        const q = new Queue();
+
+        const taskFn = () => {
+            throw new Error("It failed.");
+        };
+
+        const task = q.add(taskFn);
+
+        const errorMock = (...args) => {
+            errorMock.calls.push(args);
+        };
+        errorMock.calls = [];
+        const originalError = console.error;
+        console.error = errorMock;
+
+        task.promise.catch(() => null); // catch rejection
+
+        await new Promise(r => setTimeout(r, 100));
+        errorMock.calls.must.have.length(0);
+
+        q.destroy();
+        console.error = originalError;
+    });
 });
