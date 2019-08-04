@@ -1050,7 +1050,8 @@ describe("Queue", () => {
 
         await task2.promise;
 
-        calls.length = 0;
+        calls.length = 0; // eslint-disable-line require-atomic-updates
+        // ^ eslint bug: https://github.com/eslint/eslint/issues/11899
 
         const nextList = q.filter(filteringFn);
         nextList.must.eql([]);
@@ -1252,6 +1253,7 @@ describe("Queue", () => {
         errorMock.calls.must.have.length(0);
 
         q.destroy();
-        console.error = originalError;
+        console.error = originalError; // eslint-disable-line require-atomic-updates
+        // ^ eslint bug: https://github.com/eslint/eslint/issues/11899
     });
 });
