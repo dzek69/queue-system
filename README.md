@@ -2,8 +2,6 @@
 
 JavaScript tasks queuing system.
 
-Currently it should be treated as undocumented library for personal use. API ~~may~~ will change.
-
 ## Features
 
 - allows running tasks one by one
@@ -16,9 +14,14 @@ Currently it should be treated as undocumented library for personal use. API ~~m
 - has simple api
 - is fully unit tested
 
+## Documentation
+
+See here: https://dzek69.github.io/queue-system
+
 ## To be done / roadmap
 
 > Target version may change.
+> Public API will change with 2.0
 
 ### 1.2
 - option to cancel ongoing tasks on destroy
