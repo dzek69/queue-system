@@ -1,36 +1,53 @@
 {
   "name": "queue-system",
-  "version": "1.1.4",
-  "main": "src/index.js",
-  "repository": "https://github.com/dzek69/queue-system.git",
-  "author": "Jacek Nowacki @dzek69 <git-public@dzek.eu>",
+  "version": "2.0.0",
+  "repository": "git@github.com:dzek69/queue-system.git",
+  "author": "Jacek Nowacki",
   "license": "MIT",
   "scripts": {
-    "test": "cross-env NODE_ENV=testing mocha 'src/**/*.spec.js'",
-    "docs": "node build-scripts/docs && jsdoc src README.md -t node_modules/docdash -d ./docs -u ./tutorials && node build-scripts/docs.after",
-    "transpile": "node build-scripts/transpile && babel src -d dist --ignore spec.js",
-    "prepublishOnly": "npm run test && npm run lint && npm run docs",
-    "prepack": "npm run transpile",
-    "lint": "eslint src/**/*.js src/*.js",
-    "lint:fix": "npm run lint -- --fix"
+    "test": "cross-env NODE_ENV=testing mocha --require ./test/bootstrap.cjs 'src/**/*.spec.mjs'",
+    "docs": "node build-scripts/docs.mjs && jsdoc -r src README.md -t node_modules/docdash -d ./docs -u ./tutorials -c jsdoc.json && node build-scripts/docs.after.mjs",
+    "transpile": "node build-scripts/transpile.mjs && babel src -d dist --ignore **/*.spec.mjs && node build-scripts/transpile.after.mjs",
+    "prepublishOnly": "yarn lint && yarn test && yarn docs",
+    "prepack": "yarn transpile",
+    "lint": "cross-env eslint --report-unused-disable-directives 'src/**/*.mjs' 'src/*.mjs'",
+    "lint:fix": "yarn lint --fix"
   },
-  "devDependencies": {
-    "@babel/cli": "^7.5.5",
-    "@babel/core": "^7.5.5",
-    "@babel/polyfill": "^7.4.4",
-    "@babel/preset-env": "^7.5.5",
-    "@babel/register": "^7.5.5",
-    "@dzek69/eslint-config-base": "^1.0.0",
-    "babel-plugin-rewire": "^1.2.0",
-    "cross-env": "^5.2.0",
-    "docdash": "^1.1.1",
-    "eslint": "^6.2.2",
-    "fs-extra": "^7.0.1",
-    "jsdoc": "^3.6.3",
-    "mocha": "^6.2.0",
-    "must": "^0.13.4"
+  "main": "dist/index.js",
+  "module": "src/index.mjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "default": "./src/index.mjs"
+    }
   },
   "dependencies": {
-    "eventemitter3": "^4.0.0"
+    "eventemitter3": "^4.0.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.7",
+    "@babel/polyfill": "^7.8.7",
+    "@babel/preset-env": "^7.8.7",
+    "@babel/register": "^7.8.6",
+    "@dzek69/eslint-config-base": "^1.0.1",
+    "babel-plugin-module-extension": "^0.1.1",
+    "cross-env": "^7.0.2",
+    "docdash": "^1.2.0",
+    "eslint": "^6.8.0",
+    "fs-extra": "^8.1.0",
+    "husky": "^4.2.3",
+    "jsdoc": "^3.6.3",
+    "mocha": "^6.2.2",
+    "must": "^0.13.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "yarn prepublishOnly && yarn transpile"
+    }
+  },
+  "libraryTemplate": {
+    "version": "2.0.8",
+    "fixDefaultForCommonJS": true
   }
 }

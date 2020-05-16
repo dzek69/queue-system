@@ -1,4 +1,4 @@
-const { join } = require("path");
+import { join } from "path";
 
 const prepareCopyList = (filesToCopy) => {
     return filesToCopy.map(source => {
@@ -11,6 +11,6 @@ const prepareCopyList = (filesToCopy) => {
     });
 };
 
-module.exports = {
+export {
     prepareCopyList,
 };

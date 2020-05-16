@@ -1,12 +1,12 @@
-const { remove } = require("fs-extra");
-const { additionalTutorialFiles } = require("./docs.config");
-const { prepareCopyList } = require("./docs/utils");
+import fs from "fs-extra";
+import config from "./docs.config.mjs";
+import { prepareCopyList } from "./docs/utils.mjs";
 
 (async () => {
     try {
-        const copyList = prepareCopyList(additionalTutorialFiles);
+        const copyList = prepareCopyList(config.additionalTutorialFiles);
         const removeJobs = copyList.map(({ source, target }) => {
-            return remove(target);
+            return fs.remove(target);
         });
 
         await Promise.all(removeJobs);

@@ -6,4 +6,4 @@ const config = {
     additionalTutorialFiles,
 };
 
-module.exports = config;
+export default config;

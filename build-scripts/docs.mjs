@@ -1,6 +1,8 @@
-const { ensureDir, remove, copy } = require("fs-extra");
-const { additionalTutorialFiles } = require("./docs.config");
-const { prepareCopyList } = require("./docs/utils");
+import fs from "fs-extra";
+import config from "./docs.config.mjs";
+import { prepareCopyList } from "./docs/utils.mjs";
+
+const { ensureDir, remove, copy } = fs;
 
 (async () => {
     try {
@@ -11,7 +13,7 @@ const { prepareCopyList } = require("./docs/utils");
 
         await Promise.all(tasks);
 
-        const copyList = prepareCopyList(additionalTutorialFiles);
+        const copyList = prepareCopyList(config.additionalTutorialFiles);
         const copyJobs = copyList.map(({ source, target }) => {
             return copy(source, target);
         });

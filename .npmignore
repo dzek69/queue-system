@@ -3,10 +3,11 @@
 /test/
 /dist/**/*.spec.js
 
-/.babelrc
+/.babelrc.cjs
 /yarn.lock
 /*.tgz
 /*.log
 /.yarnclean
+/jsdoc.json
 /.editorconfig
 /.eslintrc.json

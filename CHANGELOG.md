@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [UNRELEASED]
 - nothing yet
 
+## [2.0.0] - 2020-05-16
+### Changed
+- native esm is now used
+
 ## [1.1.4] - 2019-08-29
 ### Changed
 - updated dependencies
@@ -38,7 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - cancelling group of tasks by predicate
 - ability to get task position in the queue
 - ability to check if task is currently running
-- event emitting queue order when 
+- event emitting queue order when
 
 ### Changed
 - transpiling options, now transpiled code is for environments used by at least 3% of people

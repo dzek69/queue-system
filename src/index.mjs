@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3"; // eslint-disable-line max-lines
-import Task from "./Task";
+import Task from "./Task.mjs";
 
 const NOT_FOUND = -1;
 

@@ -1,6 +1,6 @@
 import Queue, { EVENTS } from "./index";
 
-const noop = () => {}; // eslint-disable-line no-empty-function
+const noop = () => {};
 
 const ACTIONS = {
     RESOLVE: {},

@@ -1,8 +1,8 @@
-const { remove } = require("fs-extra");
+import fs from "fs-extra";
 
 (async () => {
     const tasks = [
-        remove("dist"),
+        fs.remove("dist"),
     ];
 
     try {

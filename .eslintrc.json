@@ -1,27 +1,31 @@
 {
-  "extends": [
-    "@dzek69/eslint-config-base"
-  ],
-  "env": {
-    "node": true
-  },
-  "parserOptions": {
-    "sourceType": "module"
-  },
-  "overrides": [
-    {
-      "files": ["src/*.spec.js", "src/**/*.spec.js"],
-      "env": {
-        "mocha": true
-      },
-      "rules": {
-        "global-require": "off",
-        "max-lines": "off",
-        "max-lines-per-function": "off",
-        "max-statements": "off",
-        "no-magic-numbers": "off",
-        "no-empty-function": "off"
-      }
-    }
-  ]
+    "extends": [
+        "@dzek69/eslint-config-base"
+    ],
+    "env": {
+        "node": true
+    },
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "overrides": [
+        {
+            "files": [
+                "src/*.spec.mjs", "src/**/*.spec.mjs"
+            ],
+            "env": {
+                "mocha": true
+            },
+            "rules": {
+                "func-names": "off",
+                "global-require": "off",
+                "max-lines": "off",
+                "max-lines-per-function": "off",
+                "max-statements": "off",
+                "no-empty-function": "off",
+                "no-magic-numbers": "off",
+                "no-unused-labels": "off"
+            }
+        }
+    ]
 }

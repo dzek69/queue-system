@@ -1,12 +1,16 @@
 ## Importing
-There is just one export you'll need:
 ```javascript
 import Queue from "queue-system";
 ```
 
-For transpiled CommonJS code import from `dist` directory:
+Node 13.2+ and some older Node versions with --experimental-modules flag:
 ```javascript
-const Queue = require("queue-system/dist").default;
+const Queue = require("queue-system");
+```
+
+Older Node versions:
+```javascript
+const Queue = require("queue-system/dist");
 ```
 
 ## What is a Task?
@@ -29,7 +33,7 @@ A {@link Queue} is internally holding a {@link Task}s list. Each task stays in t
 
 To create an empty queue just create new instance:
 ```javascript
-const q = new Queue(); 
+const q = new Queue();
 ```
 
 Each instance of a Queue is separate queue that works independently. Queue constructor takes options parameter,

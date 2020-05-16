@@ -1,5 +1,5 @@
-{
-    "presets": [
+const config = {
+    presets: [
         [
             "@babel/env",
             {
@@ -13,11 +13,9 @@
             }
         ]
     ],
-    "env": {
-        "testing": {
-            "plugins": [
-                "rewire"
-            ]
-        }
-    }
-}
+    plugins: [
+        ["module-extension", { mjs: "" }]
+    ].filter(Boolean),
+};
+
+module.exports = config;

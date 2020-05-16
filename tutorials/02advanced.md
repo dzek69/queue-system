@@ -38,7 +38,7 @@ task.cancel();
 Or you can use filter-based cancelling method on the Queue instance:
 ```javascript
 q.cancelBy((taskData, isRunning, isCancelled) => {
-    return taskData && taskData.user === "john"; 
+    return taskData && taskData.user === "john";
 });
 ```
 
