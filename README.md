@@ -13,6 +13,7 @@ JavaScript tasks queuing system.
 - emits events allowing tracking queue progress
 - has simple api
 - is fully unit tested
+- TS support
 
 ## Documentation
 
@@ -21,17 +22,17 @@ See here: https://dzek69.github.io/queue-system
 ## To be done / roadmap
 
 > Target version may change.
-> Public API will change with 3.0
+> Public API will change with 4.0
 
-### 2.1
+### 3.1
 - option to cancel ongoing tasks on destroy
 - task itself should have queue position event to listen on
 
-### 2.2
+### 3.2
 - add "is finished" to task (successfully resolved)
 - distinguish tasks status between "is requested to cancel" and "is cancelled" (not doing anything anymore)
 
-### 3.0
+### 4.0
 - better api to force start task (should not require argument)
 - massive code cleanup?
 

@@ -1,17 +1,51 @@
-let id;
+import type { Queue } from "./Queue.js";
+import type { IsDestroyed, TaskFn, VerifyFn } from "./types";
+
+let id: number;
 id = 1;
 
-const noop = () => {}; // eslint-disable-line no-empty-function
+const noop = () => undefined;
 
 class Task {
+    private readonly _queue: Queue;
+
+    private readonly _fn: TaskFn;
+
+    private readonly _check: VerifyFn;
+
+    private _cancelled: boolean;
+
+    private _started: boolean;
+
+    public id: number; // @TODO make private? remove?
+
+    public data?: Record<string, unknown>;
+
+    public promise: Promise<unknown>; // @TODO use getter?
+
+    private readonly _cancelPromise: Promise<never>;
+
+    private _cancelReject?: (error: Error) => void;
+
+    private _cancelError?: Error;
+
+    private _resolve?: (value: unknown) => void;
+
+    private _reject?: (reason?: unknown) => void;
+
+    private readonly _isQueueDestroyed: IsDestroyed;
+
+    public start: typeof Task.prototype.run;
+
     /**
      * Tasks instances should only be created by Queue instance. Do not use directly.
      * @param {Queue} queue - queue instance
      * @param {function} fn - task function
      * @param {function} check - function that verifies if task can be started
+     * @param {function} isQueueDestroyed - function that verifies if task can be started
      * @class Task
      */
-    constructor(queue, fn, check) {
+    public constructor(queue: Queue, fn: TaskFn, check: VerifyFn, isQueueDestroyed: IsDestroyed) {
         this._queue = queue;
         this._fn = fn;
         this._check = check;
@@ -27,19 +61,24 @@ class Task {
             this._resolve = _resolve;
             this._reject = _reject;
         });
+
         this._cancelPromise = new Promise((_resolve, _reject) => {
-            this._cancelReject = (error) => {
+            this._cancelReject = (error: Error) => {
                 this._cancelError = error;
                 _reject(error);
             };
         });
+
+        this._isQueueDestroyed = isQueueDestroyed;
+
         this._cancelPromise.catch(noop); // prevent unhandled rejection if catch isn't registered (isCancelled is used)
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.start = this.run;
         this.cancel = this.cancel.bind(this);
     }
 
-    _isCancelled() {
+    private async _isCancelled() {
         if (this._cancelled) {
             return Promise.reject(this._cancelError);
         }
@@ -50,19 +89,19 @@ class Task {
      * Checks if task was requested to be cancelled.
      * @returns {boolean} - true if task was cancelled, false otherwise
      */
-    isCancelled() {
+    public isCancelled() {
         return this._cancelled;
     }
 
     /**
      * Requests task cancellation.
      */
-    cancel() {
+    public cancel() {
         if (this._cancelled) {
             return;
         }
         this._cancelled = true;
-        this._cancelReject(new Error("Task cancelled"));
+        this._cancelReject!(new Error("Task cancelled"));
         if (!this._started) {
             this.remove();
         }
@@ -70,11 +109,11 @@ class Task {
 
     /**
      * Starts task.
-     * @param {boolean} force - force start immediately
+     * @param {[boolean]} force - force start immediately
      * @returns {void|Promise}
      * @throws Error - when task is already started or task belongs to queue that is destroyed
      */
-    run(force) {
+    public run(force?: boolean): undefined | Promise<unknown> {
         if (this._cancelled) {
             throw new Error("Task was cancelled.");
         }
@@ -84,7 +123,7 @@ class Task {
         if (this._started) {
             throw new Error("Task already started.");
         }
-        if (this._queue._destroyed) {
+        if (this._isQueueDestroyed()) {
             throw new Error("Task belongs to destroyed queue.");
         }
 
@@ -97,7 +136,7 @@ class Task {
      * Removes task from list without cancelling it.
      * @deprecated use cancel instead
      */
-    remove() {
+    public remove() {
         this._queue.remove(this);
     }
 
@@ -105,7 +144,7 @@ class Task {
      * Gets task position in the queue.
      * @returns {number} task index or -1 if not found in the queue
      */
-    getPosition() {
+    public getPosition() {
         return this._queue.getTaskPosition(this);
     }
 
@@ -113,9 +152,9 @@ class Task {
      * Checks if task is currently running.
      * @returns {boolean} - true if task is running, false otherwise
      */
-    isRunning() {
+    public isRunning() {
         return this._queue.isTaskRunning(this);
     }
 }
 
-export default Task;
+export { Task };

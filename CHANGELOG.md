@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [UNRELEASED]
 - nothing yet
 
+## [3.0.0] - 2021-02-15
+### Added
+- TypeScript support
+### Changed
+- default export relaced with named export
+
 ## [2.0.0] - 2020-05-16
 ### Changed
 - native esm is now used

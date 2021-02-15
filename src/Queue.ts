@@ -1,9 +1,13 @@
-import EventEmitter from "eventemitter3"; // eslint-disable-line max-lines
-import Task from "./Task.mjs";
+/* eslint-disable max-lines */
+import EventEmitter from "eventemitter3";
+
+import { Task } from "./Task.js";
+import { EVENTS } from "./const.js";
+import type { FilterFn, QueueOptions, TaskFn } from "./types";
 
 const NOT_FOUND = -1;
 
-const remove = (array, searchItem) => {
+const remove = (array: unknown[], searchItem: unknown) => {
     const index = array.findIndex(item => item === searchItem);
     if (index === NOT_FOUND) {
         return;
@@ -17,55 +21,42 @@ const remove = (array, searchItem) => {
  */
 // @todo add typedef for events list and use it on EVENTS object
 
-const EVENTS = {
-    TASK_ADD: "task-add",
-    TASK_REMOVE: "task-remove",
-    TASK_START: "task-start",
-    TASK_END: "task-end",
-    TASK_SUCCESS: "task-success",
-    TASK_ERROR: "task-error",
-    TASK_THROWN: "task-thrown",
-    QUEUE_SIZE: "queue-size",
-    QUEUE_ORDER: "queue-order",
-};
-
 const knownEvents = Object.values(EVENTS);
 
-const isPromiseLike = (object) => {
-    return object && typeof object.then === "function" && typeof object.catch === "function";
-};
-
-/**
- * @typedef {Object} QueueOptions
- * @property {number} concurrency - how many tasks should be executed at once
- */
-
-/**
- * @typedef {Object} QueueDestroyInfo
- * @property {Array<Task>} removed - list of removed tasks, that hadn't had a chance to start
- * @property {Array<Task>} inProgress - list of ongoing tasks
- */
-
-/**
- * @typedef {function} QueueFilterFunction
- * @param {*} data - task related data
- * @param {boolean} isRunning - is the task running
- * @param {boolean} isCancelled - is the task cancelled
- */
-
 class Queue {
+    private _concurrency: number;
+
+    private readonly _tasks: Task[];
+
+    private readonly _runningTasks: Task[];
+
+    private readonly _ee: EventEmitter;
+
+    private _destroyed: boolean;
+
+    public push: typeof Queue.prototype.add;
+
+    public unshift: typeof Queue.prototype.prepend;
+
+    public on: typeof Queue.prototype.addEventListener;
+
+    public off: typeof Queue.prototype.removeEventListener;
+
+    public once: typeof Queue.prototype.addEventListenerOnce;
+
     /**
      * @param {QueueOptions} options
      * @class Queue
      */
-    constructor(options = {}) {
-        this._concurrency = options.concurrency || 1;
+    public constructor(options: QueueOptions = {}) {
+        /* eslint-disable @typescript-eslint/unbound-method */
+        this._concurrency = (options.concurrency! > 0) ? options.concurrency! : 1;
 
         this._tasks = [];
+        this._runningTasks = [];
+
         this.push = this.add;
         this.unshift = this.prepend;
-
-        this._runningTasks = [];
 
         this._ee = new EventEmitter();
 
@@ -74,9 +65,10 @@ class Queue {
         this.on = this.addEventListener;
         this.off = this.removeEventListener;
         this.once = this.addEventListenerOnce;
+        /* eslint-enable @typescript-eslint/unbound-method */
     }
 
-    _destroyedCheck() {
+    private _destroyedCheck() {
         if (this._destroyed) {
             throw new Error("This queue is destroyed");
         }
@@ -88,7 +80,7 @@ class Queue {
      * Destroyed instance won't allow you to do anything with it anymore.
      * @returns {QueueDestroyInfo} - list of removed and ongoing tasks
      */
-    destroy() {
+    public destroy() {
         this._destroyedCheck();
         this._destroyed = true;
 
@@ -97,7 +89,7 @@ class Queue {
         const tasksToRemove = this._tasks.filter((task) => {
             return !this.isTaskRunning(task);
         });
-        tasksToRemove.forEach(task => this._remove(task));
+        tasksToRemove.forEach(task => { this._remove(task); });
 
         return {
             removed: tasksToRemove,
@@ -105,11 +97,12 @@ class Queue {
         };
     }
 
-    _runNext() {
+    private _runNext() {
         const taskToRun = this._tasks.find((task) => {
             return !this.isTaskRunning(task);
         });
         if (taskToRun) {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             taskToRun.run();
             if (this._isConcurrencySlotFree()) {
                 this._runNext();
@@ -117,22 +110,23 @@ class Queue {
         }
     }
 
-    _isConcurrencySlotFree() {
+    private _isConcurrencySlotFree() {
         return this._runningTasks.length < this._concurrency;
     }
 
-    _createTask(taskFn, data) {
+    private _createTask(taskFn: TaskFn, data?: Record<string, unknown>) {
         const check = () => {
             return this._isConcurrencySlotFree();
         };
-        /* eslint-disable no-use-before-define */
-        const run = (isCancelled, cancelPromise) => {
+
+        const run = async (isCancelled: () => Promise<void>, cancelPromise: Promise<never>): Promise<unknown> => {
+            /* eslint-disable @typescript-eslint/no-use-before-define */
             this._ee.emit(EVENTS.TASK_START, task);
             this._runningTasks.push(task);
 
-            const end = (event) => {
+            const end = (event: EVENTS) => {
                 this._ee.emit(EVENTS.TASK_END, task);
-                this._ee.emit("task-" + event, task); // @todo fix to avoid event name concatenation
+                this._ee.emit(event, task);
                 this._remove(task);
                 this._removeRunning(task);
                 this._runNext();
@@ -140,40 +134,42 @@ class Queue {
 
             try {
                 const taskPromise = taskFn(isCancelled, cancelPromise);
-                if (isPromiseLike(taskPromise)) {
-                    return taskPromise.then((result) => {
-                        end("success");
+                if (taskPromise instanceof Promise) {
+                    // eslint-disable-next-line no-warning-comments
+                    // @FIXME this typecast shouldn't be needed. TypeScript bug?
+                    return (taskPromise as Promise<unknown>).then((result) => {
+                        end(EVENTS.TASK_SUCCESS);
                         return result;
                     }, (error) => {
-                        end("error");
+                        end(EVENTS.TASK_ERROR);
                         throw error;
                     });
                 }
-                end("success");
+                end(EVENTS.TASK_SUCCESS);
                 return Promise.resolve(taskPromise);
             }
-            catch (e) {
-                end("thrown");
+            catch (e: unknown) {
+                end(EVENTS.TASK_THROWN);
                 return Promise.reject(e);
             }
         };
         if (taskFn.id) {
             run.id = taskFn.id;
         }
-        /* eslint-enable no-use-before-define */
-        const task = new Task(this, run, check);
+        /* eslint-enable @typescript-eslint/no-use-before-define */
+        const task = new Task(this, run, check, () => this._destroyed);
         task.data = data;
         return task;
     }
 
     /**
      * Adds specified queue event listener.
-     * @param {EventName} eventName - event name
+     * @param {EVENTS} eventName - event name
      * @param {function} fn - listener
      * @returns {function} - unsubscribe function, call it to remove event listener
      * @throws Error - when queue is destroyed or unknown event name is given
      */
-    addEventListener(eventName, fn) {
+    public addEventListener(eventName: EVENTS, fn: () => void) {
         this._destroyedCheck();
         if (!knownEvents.includes(eventName)) {
             throw new Error("Unknown event");
@@ -186,12 +182,12 @@ class Queue {
 
     /**
      * Adds specified queue event listener that will be called only on first occurrence of event after adding.
-     * @param {EventName} eventName - event name
+     * @param {EVENTS} eventName - event name
      * @param {function} fn - listener
      * @returns {function} - unsubscribe function, call it to remove event listener
      * @throws Error - when queue is destroyed or unknown event name is given
      */
-    addEventListenerOnce(eventName, fn) {
+    public addEventListenerOnce(eventName: EVENTS, fn: () => void) {
         this._destroyedCheck();
         if (!knownEvents.includes(eventName)) {
             throw new Error("Unknown event");
@@ -204,11 +200,11 @@ class Queue {
 
     /**
      * Removes specified queue event listener.
-     * @param {EventName} eventName - event name
+     * @param {EVENTS} eventName - event name
      * @param {function} fn - listener
      * @throws Error - when queue is destroyed or unknown event name is given
      */
-    removeEventListener(eventName, fn) {
+    public removeEventListener(eventName: EVENTS, fn: () => void) {
         this._destroyedCheck();
         if (!knownEvents.includes(eventName)) {
             throw new Error("Unknown event");
@@ -220,7 +216,7 @@ class Queue {
      * Changes how many tasks may run at once.
      * @param {number} concurrency - count of tasks to run at once
      */
-    setConcurrency(concurrency) {
+    public setConcurrency(concurrency: number) {
         this._destroyedCheck();
         this._concurrency = concurrency;
         this._runNext();
@@ -233,7 +229,7 @@ class Queue {
      * @returns {Task}
      * @throws Error - when queue is destroyed
      */
-    add(taskFn, data) {
+    public add(taskFn: TaskFn, data?: Record<string, unknown>) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.push(task);
@@ -251,7 +247,7 @@ class Queue {
      * @returns {Task}
      * @throws Error - when queue is destroyed
      */
-    prepend(taskFn, data) {
+    public prepend(taskFn: TaskFn, data?: Record<string, unknown>) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.unshift(task);
@@ -272,7 +268,7 @@ class Queue {
      * @returns {Task}
      * @throws Error - when queue is destroyed
      */
-    insertAt(taskFn, index, data) {
+    public insertAt(taskFn: TaskFn, index: number, data?: Record<string, unknown>) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.splice(index, 0, task);
@@ -288,12 +284,12 @@ class Queue {
      * @param {Task} task
      * @throws {Error} - when task isn't in the queue or queue is destroyed
      */
-    remove(task) {
+    public remove(task: Task) {
         this._destroyedCheck();
         this._remove(task);
     }
 
-    _remove(task) {
+    private _remove(task: Task) {
         const lengthBefore = this._tasks.length;
         remove(this._tasks, task);
         if (this._tasks.length === lengthBefore) {
@@ -304,7 +300,7 @@ class Queue {
         this._ee.emit(EVENTS.QUEUE_ORDER, this.getTasks());
     }
 
-    _removeRunning(task) {
+    private _removeRunning(task: Task) {
         remove(this._runningTasks, task);
     }
 
@@ -312,7 +308,7 @@ class Queue {
      * Returns queue size.
      * @returns {number}
      */
-    getQueueSize() {
+    public getQueueSize() {
         return this._tasks.length;
     }
 
@@ -320,7 +316,7 @@ class Queue {
      * Returns current tasks (ongoing and waiting).
      * @returns {Array<Task>}
      */
-    getTasks() {
+    public getTasks() {
         return [...this._tasks];
     }
 
@@ -329,7 +325,7 @@ class Queue {
      * @param {QueueFilterFunction} fn - filtering function
      * @returns {Array<Task>}
      */
-    filter(fn) {
+    public filter(fn: FilterFn) {
         return this._tasks.filter(task => {
             const isRunning = this.isTaskRunning(task);
             const isCancelled = task.isCancelled();
@@ -342,9 +338,9 @@ class Queue {
      * @param {QueueFilterFunction} fn - filtering function
      * @returns {Array<Task>} - cancelled tasks
      */
-    cancelBy(fn) {
+    public cancelBy(fn: FilterFn) {
         const tasks = this.filter(fn);
-        tasks.forEach(task => task.cancel());
+        tasks.forEach(task => { task.cancel(); });
         return tasks;
     }
 
@@ -353,7 +349,7 @@ class Queue {
      * @param {Task} task - task to look for
      * @returns {number} - task index or -1 if not found
      */
-    getTaskPosition(task) {
+    public getTaskPosition(task: Task) {
         return this._tasks.findIndex(t => t === task);
     }
 
@@ -362,13 +358,11 @@ class Queue {
      * @param {Task} task - task to check
      * @returns {boolean} - true if task is running, false otherwise
      */
-    isTaskRunning(task) {
+    public isTaskRunning(task: Task) {
         return this._runningTasks.includes(task);
     }
 }
 
-export default Queue;
 export {
-    EVENTS,
+    Queue,
 };
-

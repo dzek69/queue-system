@@ -1,20 +1,23 @@
 {
     "extends": [
-        "@dzek69/eslint-config-base"
+        "@dzek69/eslint-config-base",
+        "@dzek69/eslint-config-typescript"
     ],
     "env": {
         "node": true
     },
     "parserOptions": {
-        "sourceType": "module"
+        "sourceType": "module",
+        "project": "./tsconfig.lint.json"
     },
+    "ignorePatterns": [],
     "overrides": [
         {
             "files": [
-                "src/*.spec.mjs", "src/**/*.spec.mjs"
+                "src/*.spec.*", "src/**/*.spec.*"
             ],
             "env": {
-                "mocha": true
+                "jest": true
             },
             "rules": {
                 "func-names": "off",
@@ -22,8 +25,10 @@
                 "max-lines": "off",
                 "max-lines-per-function": "off",
                 "max-statements": "off",
-                "no-empty-function": "off",
-                "no-magic-numbers": "off",
+                "@typescript-eslint/no-empty-function": "off",
+                "@typescript-eslint/no-magic-numbers": "off",
+                "@typescript-eslint/no-unsafe-call": "off",
+                "@typescript-eslint/no-unsafe-member-access": "off",
                 "no-unused-labels": "off"
             }
         }

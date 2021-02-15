@@ -1,4 +1,6 @@
-import Queue, { EVENTS } from "./index";
+/* eslint-disable */
+// @TODO remove ^
+import { EVENTS, Queue } from "./index";
 
 const noop = () => {};
 
@@ -70,7 +72,7 @@ describe("Queue", () => {
         const q = new Queue();
 
         const result = [];
-        const task = () => new Promise((resolve) => {
+        const task = async () => new Promise((resolve) => {
             result.push(1);
             setTimeout(() => {
                 result.push(2);
@@ -78,7 +80,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise((resolve) => {
             result.push(3);
             setTimeout(() => {
                 result.push(4);
@@ -86,7 +88,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const yetAnother = () => new Promise((resolve) => {
+        const yetAnother = async () => new Promise((resolve) => {
             result.push(5);
             setTimeout(() => {
                 result.push(6);
@@ -115,7 +117,7 @@ describe("Queue", () => {
         const q = new Queue();
 
         const result = [];
-        const task = () => new Promise((resolve) => {
+        const task = async () => new Promise((resolve) => {
             result.push(1);
             setTimeout(() => {
                 result.push(2);
@@ -123,7 +125,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise((resolve) => {
             result.push(3);
             setTimeout(() => {
                 result.push(4);
@@ -131,7 +133,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const yetAnother = () => new Promise((resolve) => {
+        const yetAnother = async () => new Promise((resolve) => {
             result.push(5);
             setTimeout(() => {
                 result.push(6);
@@ -165,7 +167,7 @@ describe("Queue", () => {
         });
 
         const result = [];
-        const task = () => new Promise((resolve) => {
+        const task = async () => new Promise((resolve) => {
             result.push("a");
             setTimeout(() => {
                 result.push("aa");
@@ -173,7 +175,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise((resolve) => {
             result.push("b");
             setTimeout(() => {
                 result.push("bb");
@@ -181,7 +183,7 @@ describe("Queue", () => {
             }, 50);
         });
 
-        const yetAnother = () => new Promise((resolve) => {
+        const yetAnother = async () => new Promise((resolve) => {
             result.push("c");
             setTimeout(() => {
                 result.push("cc");
@@ -210,7 +212,7 @@ describe("Queue", () => {
         const q = new Queue();
 
         const result = [];
-        const task = () => new Promise((resolve) => {
+        const task = async () => new Promise((resolve) => {
             result.push(1);
             setTimeout(() => {
                 result.push(2);
@@ -218,7 +220,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise((resolve) => {
             result.push(3);
             setTimeout(() => {
                 result.push(4);
@@ -246,7 +248,7 @@ describe("Queue", () => {
         const q = new Queue();
 
         const result = [];
-        const task = () => new Promise((resolve) => {
+        const task = async () => new Promise((resolve) => {
             result.push(1);
             setTimeout(() => {
                 result.push(2);
@@ -254,7 +256,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise((resolve) => {
             result.push(3);
             setTimeout(() => {
                 result.push(4);
@@ -282,7 +284,7 @@ describe("Queue", () => {
         const q = new Queue();
 
         const result = [];
-        const task = () => new Promise((resolve) => {
+        const task = async () => new Promise((resolve) => {
             result.push(1);
             setTimeout(() => {
                 result.push(2);
@@ -290,7 +292,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise((resolve) => {
             result.push(3);
             setTimeout(() => {
                 result.push(4);
@@ -338,7 +340,7 @@ describe("Queue", () => {
             },
         };
 
-        const task = () => new Promise((resolve) => {
+        const task = async () => new Promise((resolve) => {
             runningTasks.start();
             setTimeout(() => {
                 runningTasks.stop();
@@ -391,17 +393,17 @@ describe("Queue", () => {
         const result = [];
         const q = new Queue();
 
-        const delayedTask = () => new Promise((resolve, reject) => {
+        const delayedTask = async () => new Promise((resolve, reject) => {
             setTimeout(() => {
                 reject(new Error("delayed"));
             }, 100);
         });
 
-        const instantTask = () => new Promise((resolve, reject) => {
+        const instantTask = async () => new Promise((resolve, reject) => {
             reject(new Error("instant"));
         });
 
-        const okTask = () => new Promise((resolve) => {
+        const okTask = async () => new Promise((resolve) => {
             setTimeout(() => {
                 resolve("ok");
             }, 100);
@@ -433,17 +435,17 @@ describe("Queue", () => {
             concurrency: 2,
         });
 
-        const delayedTask = () => new Promise((resolve, reject) => {
+        const delayedTask = async () => new Promise((resolve, reject) => {
             setTimeout(() => {
                 reject(new Error("delayed"));
             }, 100);
         });
 
-        const instantTask = () => new Promise((resolve, reject) => {
+        const instantTask = async () => new Promise((resolve, reject) => {
             reject(new Error("instant"));
         });
 
-        const okTask = () => new Promise((resolve) => {
+        const okTask = async () => new Promise((resolve) => {
             setTimeout(() => {
                 resolve("ok");
             }, 100);
@@ -477,7 +479,7 @@ describe("Queue", () => {
             throw new Error("throw");
         };
 
-        const okTask = () => new Promise((resolve) => {
+        const okTask = async () => new Promise((resolve) => {
             setTimeout(() => {
                 resolve("ok");
             }, 100);
@@ -681,8 +683,8 @@ describe("Queue", () => {
         });
 
         (() => q.addEventListener("aaa")).must.throw("Unknown event");
-        (() => q.removeEventListener("aaa")).must.throw("Unknown event");
-        (() => q.removeEventListener("task-end")).must.not.throw();
+        (() => { q.removeEventListener("aaa"); }).must.throw("Unknown event");
+        (() => { q.removeEventListener("task-end"); }).must.not.throw();
 
         q.destroy();
     });
@@ -766,13 +768,13 @@ describe("Queue", () => {
 
         (() => q.destroy()).must.throw("This queue is destroyed");
         (() => q.addEventListener()).must.throw("This queue is destroyed");
-        (() => q.removeEventListener()).must.throw("This queue is destroyed");
-        (() => q.setConcurrency()).must.throw("This queue is destroyed");
+        (() => { q.removeEventListener(); }).must.throw("This queue is destroyed");
+        (() => { q.setConcurrency(); }).must.throw("This queue is destroyed");
         (() => q.add()).must.throw("This queue is destroyed");
         (() => q.push()).must.throw("This queue is destroyed");
         (() => q.prepend()).must.throw("This queue is destroyed");
         (() => q.unshift()).must.throw("This queue is destroyed");
-        (() => q.remove()).must.throw("This queue is destroyed");
+        (() => { q.remove(); }).must.throw("This queue is destroyed");
 
         q.getQueueSize().must.equal(0);
     });
@@ -784,7 +786,7 @@ describe("Queue", () => {
 
         await taskInstance.promise;
 
-        (() => q.remove(taskInstance)).must.throw("Task not found in queue");
+        (() => { q.remove(taskInstance); }).must.throw("Task not found in queue");
 
         q.destroy();
     });
@@ -850,7 +852,7 @@ describe("Queue", () => {
 
         const task = async (isCancelled, cancelPromise) => {
             await Promise.race([
-                new Promise(resolve => setTimeout(() => resolve(666), 300)),
+                new Promise(resolve => setTimeout(() => { resolve(666); }, 300)),
                 cancelPromise,
             ]);
         };

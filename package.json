@@ -1,53 +1,59 @@
 {
   "name": "queue-system",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "repository": "git@github.com:dzek69/queue-system.git",
   "author": "Jacek Nowacki",
   "license": "MIT",
   "scripts": {
-    "test": "cross-env NODE_ENV=testing mocha --require ./test/bootstrap.cjs 'src/**/*.spec.mjs'",
-    "docs": "node build-scripts/docs.mjs && jsdoc -r src README.md -t node_modules/docdash -d ./docs -u ./tutorials -c jsdoc.json && node build-scripts/docs.after.mjs",
-    "transpile": "node build-scripts/transpile.mjs && babel src -d dist --ignore **/*.spec.mjs && node build-scripts/transpile.after.mjs",
-    "prepublishOnly": "yarn lint && yarn test && yarn docs",
-    "prepack": "yarn transpile",
-    "lint": "cross-env eslint --report-unused-disable-directives 'src/**/*.mjs' 'src/*.mjs'",
-    "lint:fix": "yarn lint --fix"
+    "test": "NODE_ENV=test jest",
+    "docs": "typedoc src/index.ts --out docs --listInvalidSymbolLinks --includes tutorials",
+    "compile": "yarn compile:esm && yarn compile:cjs",
+    "compile:esm": "rm -rf esm && tsc && node ./build-scripts/compile.esm.after.mjs",
+    "compile:cjs": "rm -rf dist && tsc --project tsconfig.cjs.json && node ./build-scripts/compile.cjs.after.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx,.mjs",
+    "lint:fix": "yarn lint --fix",
+    "prepack": "yarn compile",
+    "prepublishOnly": "yarn lint && yarn test && yarn docs"
   },
-  "main": "dist/index.js",
-  "module": "src/index.mjs",
   "exports": {
     ".": {
       "require": "./dist/index.js",
-      "default": "./src/index.mjs"
+      "default": "./esm/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./esm/index.d.js",
+  "module": "./esm/index.js",
+  "type": "module",
   "dependencies": {
     "eventemitter3": "^4.0.4"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.8.7",
-    "@babel/polyfill": "^7.8.7",
-    "@babel/preset-env": "^7.8.7",
-    "@babel/register": "^7.8.6",
-    "@dzek69/eslint-config-base": "^1.0.1",
-    "babel-plugin-module-extension": "^0.1.1",
-    "cross-env": "^7.0.2",
-    "docdash": "^1.2.0",
-    "eslint": "^6.8.0",
-    "fs-extra": "^8.1.0",
-    "husky": "^4.2.3",
-    "jsdoc": "^3.6.3",
-    "mocha": "^6.2.2",
-    "must": "^0.13.4"
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-typescript": "^7.12.7",
+    "@dzek69/eslint-config-base": "^2.0.0",
+    "@dzek69/eslint-config-typescript": "^0.2.2",
+    "@typescript-eslint/eslint-plugin": "^4.11.1",
+    "@typescript-eslint/parser": "^4.11.1",
+    "eslint": "^7.14.0",
+    "fs-extra": "^9.0.1",
+    "husky": "^4.3.0",
+    "jest": "^26.6.3",
+    "must": "^0.13.4",
+    "ts-node": "^9.0.0",
+    "typedoc": "^0.20.4",
+    "typescript": "^4.1.2"
   },
   "husky": {
     "hooks": {
-      "pre-push": "yarn prepublishOnly && yarn transpile"
+      "pre-push": "yarn prepublishOnly && yarn compile"
     }
   },
   "libraryTemplate": {
-    "version": "2.0.8",
+    "version": "0.0.2-beta.5",
+    "language": "typescript",
     "fixDefaultForCommonJS": true
   }
 }
