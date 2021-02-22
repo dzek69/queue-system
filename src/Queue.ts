@@ -3,6 +3,7 @@ import EventEmitter from "eventemitter3";
 
 import { Task } from "./Task.js";
 import { EVENTS } from "./const.js";
+import { isThenable } from "./isThenable.js";
 import type { FilterFn, QueueOptions, TaskFn } from "./types";
 
 const NOT_FOUND = -1;
@@ -134,10 +135,10 @@ class Queue {
 
             try {
                 const taskPromise = taskFn(isCancelled, cancelPromise);
-                if (taskPromise instanceof Promise) {
+                if (isThenable(taskPromise)) {
                     // eslint-disable-next-line no-warning-comments
                     // @FIXME this typecast shouldn't be needed. TypeScript bug?
-                    return (taskPromise as Promise<unknown>).then((result) => {
+                    return (taskPromise).then((result) => {
                         end(EVENTS.TASK_SUCCESS);
                         return result;
                     }, (error) => {

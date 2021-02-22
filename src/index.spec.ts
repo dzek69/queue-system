@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @TODO remove ^
+import PromiseAlternative from "promise";
 import { EVENTS, Queue } from "./index";
 
 const noop = () => {};
@@ -184,6 +185,53 @@ describe("Queue", () => {
         });
 
         const yetAnother = async () => new Promise((resolve) => {
+            result.push("c");
+            setTimeout(() => {
+                result.push("cc");
+                resolve();
+            }, 100);
+        });
+
+        const taskInstance1 = q.push(task);
+        const taskInstance2 = q.push(taskAnother);
+        const taskInstance3 = q.push(yetAnother);
+
+        await Promise.all([
+            taskInstance1.promise,
+            taskInstance2.promise,
+            taskInstance3.promise,
+        ]);
+
+        result.must.eql([
+            "a", "b", "bb", "c", "aa", "cc",
+        ]);
+
+        q.destroy();
+    });
+
+    it("concurrency works with thenables/alternative Promise libraries", async () => {
+        const q = new Queue({
+            concurrency: 2,
+        });
+
+        const result = [];
+        const task = () => new PromiseAlternative((resolve) => {
+            result.push("a");
+            setTimeout(() => {
+                result.push("aa");
+                resolve();
+            }, 100);
+        });
+
+        const taskAnother = () => new PromiseAlternative((resolve) => {
+            result.push("b");
+            setTimeout(() => {
+                result.push("bb");
+                resolve();
+            }, 50);
+        });
+
+        const yetAnother = () => new PromiseAlternative((resolve) => {
             result.push("c");
             setTimeout(() => {
                 result.push("cc");
