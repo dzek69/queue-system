@@ -11,3 +11,4 @@
 /nodemon.json
 /.editorconfig
 /tsconfig.*
+/.eslintrc.json

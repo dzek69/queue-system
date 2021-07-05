@@ -371,7 +371,7 @@ describe("Queue", () => {
     it("allows to update concurrency", async () => {
         const q = new Queue();
 
-        const runningTasks = { // eslint-disable-line object-shorthand
+        const runningTasks = {
             max: 0,
             current: 0,
             reset() {
@@ -1100,8 +1100,7 @@ describe("Queue", () => {
 
         await task2.promise;
 
-        calls.length = 0; // eslint-disable-line require-atomic-updates
-        // ^ eslint bug: https://github.com/eslint/eslint/issues/11899
+        calls.length = 0;
 
         const nextList = q.filter(filteringFn);
         nextList.must.eql([]);
@@ -1303,7 +1302,6 @@ describe("Queue", () => {
         errorMock.calls.must.have.length(0);
 
         q.destroy();
-        console.error = originalError; // eslint-disable-line require-atomic-updates
-        // ^ eslint bug: https://github.com/eslint/eslint/issues/11899
+        console.error = originalError;
     });
 });

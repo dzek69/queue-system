@@ -1,13 +1,18 @@
 import type { Task } from "./Task";
 
-interface TaskFn {
-    (isCancelled: () => Promise<void>, cancelPromise: Promise<never>): Promise<unknown>;
+interface TaskFn<T> {
+    (isCancelled: () => Promise<void>, cancelPromise: Promise<never>): T | Promise<T>;
+    id?: number;
+}
+
+interface PromisedTaskFn<T> {
+    (isCancelled: () => Promise<void>, cancelPromise: Promise<never>): Promise<T>;
     id?: number;
 }
 
 type VerifyFn = () => boolean;
 
-type FilterFn = (data: Record<string, unknown> | undefined, isRunning: boolean, isCancelled: boolean) => boolean;
+type FilterFn = (data: { [key: string]: unknown } | undefined, isRunning: boolean, isCancelled: boolean) => boolean;
 
 type IsDestroyed = () => boolean;
 
@@ -25,8 +30,8 @@ interface QueueOptions {
  * @property {Array<Task>} inProgress - list of ongoing tasks
  */
 interface QueueDestroyInfo {
-    removed: Task[];
-    inProgress: Task[];
+    removed: Task<unknown>[];
+    inProgress: Task<unknown>[];
 }
 
 /**
@@ -39,4 +44,9 @@ interface QueueDestroyInfo {
 
 type QueueFilterFunction = (data: unknown, isRunning: boolean, isCancelled: boolean) => boolean;
 
-export type { TaskFn, VerifyFn, FilterFn, IsDestroyed, QueueOptions, QueueDestroyInfo, QueueFilterFunction };
+export type {
+    TaskFn, PromisedTaskFn,
+    VerifyFn, FilterFn,
+    IsDestroyed,
+    QueueOptions, QueueDestroyInfo, QueueFilterFunction,
+};

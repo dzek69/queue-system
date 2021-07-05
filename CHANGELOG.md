@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [UNRELEASED]
 - nothing yet
 
+## [3.0.2] - 2021-07-06
+### Fixed
+- typings not detecting return type for tasks
+### Dev
+- deps bump, tslib update
+### Changed
+- some tutorial updates
+
 ## [3.0.1] - 2021-02-22
 ### Fixed
 - properly queuing non-Promise but thenable tasks (broken in 3.0.0)

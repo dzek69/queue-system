@@ -4,7 +4,7 @@ import EventEmitter from "eventemitter3";
 import { Task } from "./Task.js";
 import { EVENTS } from "./const.js";
 import { isThenable } from "./isThenable.js";
-import type { FilterFn, QueueOptions, TaskFn } from "./types";
+import type { FilterFn, QueueOptions, TaskFn, QueueDestroyInfo, PromisedTaskFn } from "./types";
 
 const NOT_FOUND = -1;
 
@@ -27,9 +27,9 @@ const knownEvents = Object.values(EVENTS);
 class Queue {
     private _concurrency: number;
 
-    private readonly _tasks: Task[];
+    private readonly _tasks: Task<any>[]; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-    private readonly _runningTasks: Task[];
+    private readonly _runningTasks: Task<any>[]; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     private readonly _ee: EventEmitter;
 
@@ -81,7 +81,7 @@ class Queue {
      * Destroyed instance won't allow you to do anything with it anymore.
      * @returns {QueueDestroyInfo} - list of removed and ongoing tasks
      */
-    public destroy() {
+    public destroy(): QueueDestroyInfo {
         this._destroyedCheck();
         this._destroyed = true;
 
@@ -115,12 +115,15 @@ class Queue {
         return this._runningTasks.length < this._concurrency;
     }
 
-    private _createTask(taskFn: TaskFn, data?: Record<string, unknown>) {
+    private _createTask<V>(taskFn: TaskFn<V>, data?: { [key: string]: unknown }) {
         const check = () => {
             return this._isConcurrencySlotFree();
         };
 
-        const run = async (isCancelled: () => Promise<void>, cancelPromise: Promise<never>): Promise<unknown> => {
+        const run: PromisedTaskFn<V> = async (
+            isCancelled: () => Promise<void>,
+            cancelPromise: Promise<never>,
+        ) => {
             /* eslint-disable @typescript-eslint/no-use-before-define */
             this._ee.emit(EVENTS.TASK_START, task);
             this._runningTasks.push(task);
@@ -230,7 +233,7 @@ class Queue {
      * @returns {Task}
      * @throws Error - when queue is destroyed
      */
-    public add(taskFn: TaskFn, data?: Record<string, unknown>) {
+    public add<V>(taskFn: TaskFn<V>, data?: { [key: string]: unknown }) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.push(task);
@@ -248,7 +251,7 @@ class Queue {
      * @returns {Task}
      * @throws Error - when queue is destroyed
      */
-    public prepend(taskFn: TaskFn, data?: Record<string, unknown>) {
+    public prepend<V>(taskFn: TaskFn<V>, data?: { [key: string]: unknown }) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.unshift(task);
@@ -269,7 +272,7 @@ class Queue {
      * @returns {Task}
      * @throws Error - when queue is destroyed
      */
-    public insertAt(taskFn: TaskFn, index: number, data?: Record<string, unknown>) {
+    public insertAt<V>(taskFn: TaskFn<V>, index: number, data?: { [key: string]: unknown }) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.splice(index, 0, task);
@@ -285,12 +288,12 @@ class Queue {
      * @param {Task} task
      * @throws {Error} - when task isn't in the queue or queue is destroyed
      */
-    public remove(task: Task) {
+    public remove<V>(task: Task<V>) {
         this._destroyedCheck();
         this._remove(task);
     }
 
-    private _remove(task: Task) {
+    private _remove<V>(task: Task<V>) {
         const lengthBefore = this._tasks.length;
         remove(this._tasks, task);
         if (this._tasks.length === lengthBefore) {
@@ -301,7 +304,7 @@ class Queue {
         this._ee.emit(EVENTS.QUEUE_ORDER, this.getTasks());
     }
 
-    private _removeRunning(task: Task) {
+    private _removeRunning<V>(task: Task<V>) {
         remove(this._runningTasks, task);
     }
 
@@ -350,7 +353,7 @@ class Queue {
      * @param {Task} task - task to look for
      * @returns {number} - task index or -1 if not found
      */
-    public getTaskPosition(task: Task) {
+    public getTaskPosition<V>(task: Task<V>) {
         return this._tasks.findIndex(t => t === task);
     }
 
@@ -359,7 +362,7 @@ class Queue {
      * @param {Task} task - task to check
      * @returns {boolean} - true if task is running, false otherwise
      */
-    public isTaskRunning(task: Task) {
+    public isTaskRunning<V>(task: Task<V>) {
         return this._runningTasks.includes(task);
     }
 }

@@ -1,25 +1,17 @@
 ## Importing
 ```javascript
-import Queue from "queue-system";
-```
-
-Node 13.2+ and some older Node versions with --experimental-modules flag:
-```javascript
-const Queue = require("queue-system");
-```
-
-Older Node versions:
-```javascript
-const Queue = require("queue-system/dist");
+import { Queue } from "queue-system";
+// or
+const { Queue } = require("queue-system");
 ```
 
 ## What is a Task?
 
-{@link Task} instance is constructed with task function given to one of the queue methods that's for adding a new task.
+**Task** instance is constructed with a task function {@link TaskFn} and should be given to one of the queue methods.
 Task behaves like a wrapper for given method, it doesn't instantly call it but waits until it's time to run it.
 
 Task "promisifies" synchronous methods too, it means that even if your method is synchronous - Task will still wrap it
-with a Promise to unify its API that is used to dealing with tasks.
+with a Promise to unify its API that is used to deal with tasks.
 
 To get access to actual result of a task being run - you need to get `promise` property from a task.
 
@@ -28,7 +20,7 @@ async task function rejects or when both sync or async task function throws befo
 
 ## What is a Queue? Creating and destroying the queue
 
-A {@link Queue} is internally holding a {@link Task}s list. Each task stays in the queue until it is fulfilled
+A {@link Queue} is internally holding a **Task**s list. Each task stays in the queue until it is fulfilled
 (resolved or rejected, just like Promises), which means that running tasks are still kept in the queue.
 
 To create an empty queue just create new instance:
@@ -40,7 +32,7 @@ Each instance of a Queue is separate queue that works independently. Queue const
 {@link QueueOptions}.
 
 By default each queue will run one task at once, but you can define concurrency at construct or later with
-{@link Queue#setConcurrency}.
+{@link setConcurrency}.
 
 To destroy a queue use:
 ```javascript
@@ -48,8 +40,8 @@ const info = q.destroy();
 ````
 
 The info returned is a {@link QueueDestroyInfo} object. It returns two lists of tasks:
-- `removed` - array of tasks that was queued but never had a change to start
-- `inProgress` - array of tasks that was queued and their job were ongoing
+- `removed` - array of tasks that was queued but never had a chance to start
+- `inProgress` - array of tasks that was queued and they are ongoing
 
 > Keep in mind that although there is a way to cancel an ongoing task - this won't be done automatically on destroy.
 
@@ -57,7 +49,7 @@ Destroying a queue makes its instance unuseable. You cannot add new tasks or do 
 
 ## Adding a task to a queue
 
-When adding a task you will get a {@link Task} instance in return. You can use that instance to control the task.
+When adding a task you will get a **Task** instance in return. You can use that instance to control the task.
 
 To add a task at the end of the queue:
 ```javascript

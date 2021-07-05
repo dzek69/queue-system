@@ -1,15 +1,15 @@
 import type { Queue } from "./Queue.js";
-import type { IsDestroyed, TaskFn, VerifyFn } from "./types";
+import type { IsDestroyed, PromisedTaskFn, VerifyFn } from "./types";
 
 let id: number;
 id = 1;
 
 const noop = () => undefined;
 
-class Task {
+class Task<Val> {
     private readonly _queue: Queue;
 
-    private readonly _fn: TaskFn;
+    private readonly _fn: PromisedTaskFn<Val>;
 
     private readonly _check: VerifyFn;
 
@@ -19,9 +19,9 @@ class Task {
 
     public id: number; // @TODO make private? remove?
 
-    public data?: Record<string, unknown>;
+    public data?: { [key: string]: unknown };
 
-    public promise: Promise<unknown>; // @TODO use getter?
+    public promise: Promise<Val>;
 
     private readonly _cancelPromise: Promise<never>;
 
@@ -29,7 +29,7 @@ class Task {
 
     private _cancelError?: Error;
 
-    private _resolve?: (value: unknown) => void;
+    private _resolve?: (value: Val) => void;
 
     private _reject?: (reason?: unknown) => void;
 
@@ -45,7 +45,7 @@ class Task {
      * @param {function} isQueueDestroyed - function that verifies if task can be started
      * @class Task
      */
-    public constructor(queue: Queue, fn: TaskFn, check: VerifyFn, isQueueDestroyed: IsDestroyed) {
+    public constructor(queue: Queue, fn: PromisedTaskFn<Val>, check: VerifyFn, isQueueDestroyed: IsDestroyed) {
         this._queue = queue;
         this._fn = fn;
         this._check = check;
@@ -129,7 +129,8 @@ class Task {
 
         this._started = true;
 
-        return this._fn(this._isCancelled.bind(this), this._cancelPromise).then(this._resolve, this._reject);
+        return this._fn(this._isCancelled.bind(this), this._cancelPromise)
+            .then(this._resolve, this._reject);
     }
 
     /**
