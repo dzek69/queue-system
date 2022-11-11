@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @TODO remove
 import PromiseAlternative from "promise";
 import { waitFor } from "bottom-line-utils";
 
