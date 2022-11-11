@@ -1,25 +1,21 @@
 {
-    "groups": [
+    "pages": [
         {
-            "title": "Tutorials",
-            "pages": [
-                {
-                    "title": "Basic",
-                    "source": "./tutorials/01basic.md"
-                },
-                {
-                    "title": "Advanced",
-                    "source": "./tutorials/02advanced.md"
-                },
-                {
-                    "title": "Events",
-                    "source": "./tutorials/03events.md"
-                },
-                {
-                    "title": "Cancelling",
-                    "source": "./tutorials/04cancelling.md"
-                }
-            ]
+            "title": "Basic",
+            "source": "./tutorials/01basic.md"
+        },
+        {
+            "title": "Advanced",
+            "source": "./tutorials/02advanced.md"
+        },
+        {
+            "title": "Events",
+            "source": "./tutorials/03events.md"
+        },
+        {
+            "title": "Cancelling",
+            "source": "./tutorials/04cancelling.md"
         }
-    ]
+    ],
+    "source": "tutorials"
 }

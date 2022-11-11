@@ -21,18 +21,18 @@ See here: https://dzek69.github.io/queue-system
 
 ## To be done / roadmap
 
-> Target version may change.
 > Public API will change with 4.0
 
-### 3.1
+### Soon
+- better types for event handlers
 - option to cancel ongoing tasks on destroy
 - task itself should have queue position event to listen on
 
-### 3.2
+### Later
 - add "is finished" to task (successfully resolved)
 - distinguish tasks status between "is requested to cancel" and "is cancelled" (not doing anything anymore)
 
-### 4.0
+### 4.0+
 - better api to force start task (should not require argument)
 - massive code cleanup?
 

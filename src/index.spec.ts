@@ -1,55 +1,51 @@
-/* eslint-disable */
-// @TODO remove ^
 import PromiseAlternative from "promise";
-import { EVENTS, Queue } from "./index";
+
+import { EVENTS, Queue } from "./index.js";
 
 const noop = () => {};
 
-const ACTIONS = {
-    RESOLVE: {},
-    REJECT: {},
-    THROW: {},
-};
+enum ACTIONS {
+    RESOLVE = "RESOLVE",
+    REJECT = "REJECT",
+    THROW = "THROW",
+}
 
 const TIME = {
-    INSTANT: {},
+    INSTANT: "INSTANT",
 };
 
-const createTestTask = (action, value, time, id) => {
+const createTestTask = (action: ACTIONS, value: string, time: number | "INSTANT", id?: number) => {
     const fn = () => {
         if (action === ACTIONS.THROW) {
             const doAction = () => {
                 throw new Error(value);
             };
-            if (time === TIME.INSTANT) {
+            if (time === "INSTANT") {
                 doAction();
             }
             else {
                 setTimeout(doAction, time);
             }
+            return undefined;
         }
-        else if (action !== ACTIONS.REJECT && action !== ACTIONS.RESOLVE) {
-            throw new Error("wrong action");
-        }
-        else {
-            return new Promise((resolve, reject) => {
-                const doAction = () => {
-                    if (action === ACTIONS.RESOLVE) {
-                        resolve(value);
-                    }
-                    else {
-                        reject(new Error(value));
-                    }
-                };
 
-                if (time === TIME.INSTANT) {
-                    doAction();
+        return new Promise((resolve, reject) => {
+            const doAction = () => {
+                if (action === ACTIONS.RESOLVE) {
+                    resolve(value);
                 }
                 else {
-                    setTimeout(doAction, time);
+                    reject(new Error(value));
                 }
-            });
-        }
+            };
+
+            if (time === "INSTANT") {
+                doAction();
+            }
+            else {
+                setTimeout(doAction, time);
+            }
+        });
     };
     if (id !== undefined) {
         fn.id = id;
@@ -72,8 +68,8 @@ describe("Queue", () => {
     it("basic queuing works", async () => {
         const q = new Queue();
 
-        const result = [];
-        const task = async () => new Promise((resolve) => {
+        const result: number[] = [];
+        const task = async () => new Promise<void>((resolve) => {
             result.push(1);
             setTimeout(() => {
                 result.push(2);
@@ -81,7 +77,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = async () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise<void>((resolve) => {
             result.push(3);
             setTimeout(() => {
                 result.push(4);
@@ -89,7 +85,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const yetAnother = async () => new Promise((resolve) => {
+        const yetAnother = async () => new Promise<void>((resolve) => {
             result.push(5);
             setTimeout(() => {
                 result.push(6);
@@ -117,8 +113,8 @@ describe("Queue", () => {
     it("controlling order works", async () => {
         const q = new Queue();
 
-        const result = [];
-        const task = async () => new Promise((resolve) => {
+        const result: number[] = [];
+        const task = async () => new Promise<void>((resolve) => {
             result.push(1);
             setTimeout(() => {
                 result.push(2);
@@ -126,7 +122,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = async () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise<void>((resolve) => {
             result.push(3);
             setTimeout(() => {
                 result.push(4);
@@ -134,7 +130,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const yetAnother = async () => new Promise((resolve) => {
+        const yetAnother = async () => new Promise<void>((resolve) => {
             result.push(5);
             setTimeout(() => {
                 result.push(6);
@@ -167,8 +163,8 @@ describe("Queue", () => {
             concurrency: 2,
         });
 
-        const result = [];
-        const task = async () => new Promise((resolve) => {
+        const result: string[] = [];
+        const task = async () => new Promise<void>((resolve) => {
             result.push("a");
             setTimeout(() => {
                 result.push("aa");
@@ -176,7 +172,7 @@ describe("Queue", () => {
             }, 100);
         });
 
-        const taskAnother = async () => new Promise((resolve) => {
+        const taskAnother = async () => new Promise<void>((resolve) => {
             result.push("b");
             setTimeout(() => {
                 result.push("bb");
@@ -184,7 +180,7 @@ describe("Queue", () => {
             }, 50);
         });
 
-        const yetAnother = async () => new Promise((resolve) => {
+        const yetAnother = async () => new Promise<void>((resolve) => {
             result.push("c");
             setTimeout(() => {
                 result.push("cc");
@@ -214,7 +210,7 @@ describe("Queue", () => {
             concurrency: 2,
         });
 
-        const result = [];
+        const result: string[] = [];
         const task = () => new PromiseAlternative((resolve) => {
             result.push("a");
             setTimeout(() => {
@@ -1062,7 +1058,7 @@ describe("Queue", () => {
         task1.data.must.eql({ x: 5 });
 
         const task2 = q.add(task);
-        task2.must.have.property("data");
+        task2.must.not.have.property("data");
         (task2.data === undefined).must.be.true();
 
         q.destroy();

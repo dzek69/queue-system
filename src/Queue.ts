@@ -1,10 +1,11 @@
 /* eslint-disable max-lines */
 import EventEmitter from "eventemitter3";
 
+import type { FilterFn, QueueOptions, TaskFn, QueueDestroyInfo, PromisedTaskFn } from "./types";
+
 import { Task } from "./Task.js";
 import { EVENTS } from "./const.js";
 import { isThenable } from "./isThenable.js";
-import type { FilterFn, QueueOptions, TaskFn, QueueDestroyInfo, PromisedTaskFn } from "./types";
 
 const NOT_FOUND = -1;
 
@@ -27,13 +28,13 @@ const knownEvents = Object.values(EVENTS);
 class Queue {
     private _concurrency: number;
 
-    private readonly _tasks: Task<any>[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private readonly _tasks: Task<any>[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-    private readonly _runningTasks: Task<any>[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private readonly _runningTasks: Task<any>[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     private readonly _ee: EventEmitter;
 
-    private _destroyed: boolean;
+    private _destroyed: boolean = false;
 
     public push: typeof Queue.prototype.add;
 
@@ -53,15 +54,10 @@ class Queue {
         /* eslint-disable @typescript-eslint/unbound-method */
         this._concurrency = (options.concurrency! > 0) ? options.concurrency! : 1;
 
-        this._tasks = [];
-        this._runningTasks = [];
-
         this.push = this.add;
         this.unshift = this.prepend;
 
         this._ee = new EventEmitter();
-
-        this._destroyed = false;
 
         this.on = this.addEventListener;
         this.off = this.removeEventListener;
@@ -139,17 +135,17 @@ class Queue {
             try {
                 const taskPromise = taskFn(isCancelled, cancelPromise);
                 if (isThenable(taskPromise)) {
-                    // eslint-disable-next-line no-warning-comments
-                    // @FIXME this typecast shouldn't be needed. TypeScript bug?
-                    return (taskPromise).then((result) => {
+                    // eslint-disable-next-line @typescript-eslint/return-await
+                    return taskPromise.then((result) => {
                         end(EVENTS.TASK_SUCCESS);
                         return result;
-                    }, (error) => {
+                    }, (error: Error) => { // @TODO ensure error?
                         end(EVENTS.TASK_ERROR);
                         throw error;
                     });
                 }
                 end(EVENTS.TASK_SUCCESS);
+                // eslint-disable-next-line @typescript-eslint/return-await
                 return Promise.resolve(taskPromise);
             }
             catch (e: unknown) {
@@ -162,7 +158,9 @@ class Queue {
         }
         /* eslint-enable @typescript-eslint/no-use-before-define */
         const task = new Task(this, run, check, () => this._destroyed);
-        task.data = data;
+        if (data != null) {
+            task.data = data;
+        }
         return task;
     }
 
