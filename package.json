@@ -1,12 +1,12 @@
 {
   "name": "queue-system",
-  "version": "3.0.2+",
+  "version": "4.0.0",
   "repository": "git@github.com:dzek69/queue-system.git",
   "author": "Jacek Nowacki",
   "license": "MIT",
   "scripts": {
     "test": "NODE_ENV=test jest",
-    "docs": "typedoc src/index.ts --out docs --includeVersion --pluginPages ./pagesconfig.json",
+    "docs": "typedoc src/index.ts --out docs --includeVersion --excludePrivate --pluginPages ./pagesconfig.json",
     "compile": "yarn compile:esm && yarn compile:cjs",
     "compile:esm": "rm -rf esm && tsc --project tsconfig.esm.json && node ./build-scripts/compile.esm.after.mjs",
     "compile:cjs": "rm -rf dist && tsc --project tsconfig.cjs.json && node ./build-scripts/compile.cjs.after.mjs",
@@ -44,6 +44,7 @@
     "@typescript-eslint/eslint-plugin": "^5.30.3",
     "@typescript-eslint/parser": "^5.30.3",
     "babel-plugin-module-extension": "^0.1.3",
+    "bottom-line-utils": "^0.24.1",
     "eslint": "^8.18.0",
     "eslint-plugin-import": "^2.26.0",
     "fs-extra": "^9.0.1",

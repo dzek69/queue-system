@@ -2,12 +2,10 @@ import type { Task } from "./Task";
 
 interface TaskFn<T> {
     (isCancelled: () => Promise<void>, cancelPromise: Promise<never>): T | Promise<T>;
-    id?: number;
 }
 
 interface PromisedTaskFn<T> {
     (isCancelled: () => Promise<void>, cancelPromise: Promise<never>): Promise<T>;
-    id?: number;
 }
 
 type FilterFn = (data: { [key: string]: unknown } | undefined, isRunning: boolean, isCancelled: boolean) => boolean;

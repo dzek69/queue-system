@@ -1,19 +1,19 @@
 {
     "pages": [
         {
-            "title": "Basic",
+            "title": "Basic usage",
             "source": "./tutorials/01basic.md"
         },
         {
-            "title": "Advanced",
+            "title": "Advanced usage",
             "source": "./tutorials/02advanced.md"
         },
         {
-            "title": "Events",
+            "title": "Queue events",
             "source": "./tutorials/03events.md"
         },
         {
-            "title": "Cancelling",
+            "title": "Cancelling tasks",
             "source": "./tutorials/04cancelling.md"
         }
     ],

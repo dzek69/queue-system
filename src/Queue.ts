@@ -18,11 +18,6 @@ const remove = (array: unknown[], searchItem: unknown) => {
     array.splice(index, 1);
 };
 
-/**
- * @typedef {string} EventName
- */
-// @todo add typedef for events list and use it on EVENTS object
-
 const knownEvents = Object.values(EVENTS);
 
 class Queue {
@@ -38,19 +33,34 @@ class Queue {
 
     private _paused: boolean = false;
 
+    /**
+     * @hidden
+     */
     public push: typeof Queue.prototype.add;
 
+    /**
+     * @hidden
+     */
     public unshift: typeof Queue.prototype.prepend;
 
-    public on: typeof Queue.prototype.addEventListener;
-
-    public off: typeof Queue.prototype.removeEventListener;
-
-    public once: typeof Queue.prototype.addEventListenerOnce;
+    /**
+     * @hidden
+     */
+    public readonly on: typeof Queue.prototype.addEventListener;
 
     /**
-     * @param {QueueOptions} options
-     * @class Queue
+     * @hidden
+     */
+    public readonly off: typeof Queue.prototype.removeEventListener;
+
+    /**
+     * @hidden
+     */
+    public readonly once: typeof Queue.prototype.addEventListenerOnce;
+
+    /**
+     * Creates an instance of Queue, optionally definint default options.
+     * @param options
      */
     public constructor(options: QueueOptions = {}) {
         /* eslint-disable @typescript-eslint/unbound-method */
@@ -158,9 +168,6 @@ class Queue {
                 return Promise.reject(e);
             }
         };
-        if (taskFn.id) {
-            run.id = taskFn.id;
-        }
         /* eslint-enable @typescript-eslint/no-use-before-define */
         const task = new Task(this, run, () => this._destroyed);
         if (data != null) {
@@ -171,7 +178,7 @@ class Queue {
 
     /**
      * Adds specified queue event listener.
-     * @param {EVENTS} eventName - event name
+     * @param {EVENTS} eventName
      * @param {function} fn - listener
      * @returns {function} - unsubscribe function, call it to remove event listener
      * @throws Error - when queue is destroyed or unknown event name is given
@@ -189,7 +196,7 @@ class Queue {
 
     /**
      * Adds specified queue event listener that will be called only on first occurrence of event after adding.
-     * @param {EVENTS} eventName - event name
+     * @param {EVENTS} eventName
      * @param {function} fn - listener
      * @returns {function} - unsubscribe function, call it to remove event listener
      * @throws Error - when queue is destroyed or unknown event name is given
@@ -207,7 +214,7 @@ class Queue {
 
     /**
      * Removes specified queue event listener.
-     * @param {EVENTS} eventName - event name
+     * @param {EVENTS} eventName
      * @param {function} fn - listener
      * @throws Error - when queue is destroyed or unknown event name is given
      */
@@ -231,12 +238,12 @@ class Queue {
 
     /**
      * Adds a task to the queue.
-     * @param {function} taskFn - task function
-     * @param {*} [data] - data related to task, used for filtering tasks in the queue
-     * @returns {Task}
+     * @param taskFn - task function
+     * @param data - data related to task, used for filtering tasks in the queue
+     * @returns {Task} - a {@link Task} wrapper for your {@link TaskFn task function}
      * @throws Error - when queue is destroyed
      */
-    public add<V>(taskFn: TaskFn<V>, data?: { [key: string]: unknown }) {
+    public add<ReturnValue>(taskFn: TaskFn<ReturnValue>, data?: { [key: string]: unknown }) {
         this._destroyedCheck();
         const task = this._createTask(taskFn, data);
         this._tasks.push(task);
@@ -313,7 +320,6 @@ class Queue {
 
     /**
      * Returns queue size.
-     * @returns {number}
      */
     public getQueueSize() {
         return this._tasks.length;
@@ -352,12 +358,21 @@ class Queue {
     }
 
     /**
-     * Returns given task position in the queue.
+     * Returns given task position in the queue (this includes running tasks)
      * @param {Task} task - task to look for
      * @returns {number} - task index or -1 if not found
      */
     public getTaskPosition<V>(task: Task<V>) {
         return this._tasks.findIndex(t => t === task);
+    }
+
+    /**
+     * Returns given task waiting position, 0 means the task will be first to run next time a free slot is ready
+     * @param {Task} task - task to look for
+     * @returns {number} - task index or -1 if not found (ie: already done, already running)
+     */
+    public getTaskWaitingPosition<V>(task: Task<V>) {
+        return this._tasks.filter(t => !t.isRunning()).findIndex(t => t === task);
     }
 
     /**

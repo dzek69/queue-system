@@ -1,4 +1,7 @@
 import PromiseAlternative from "promise";
+import { waitFor } from "bottom-line-utils";
+
+import type { Task, TaskFn } from "./index.js";
 
 import { EVENTS, Queue } from "./index.js";
 
@@ -11,10 +14,10 @@ enum ACTIONS {
 }
 
 const TIME = {
-    INSTANT: "INSTANT",
+    INSTANT: "INSTANT" as "INSTANT",
 };
 
-const createTestTask = (action: ACTIONS, value: string, time: number | "INSTANT", id?: number) => {
+const createTestTask = (action: ACTIONS, value: string, time: number | "INSTANT") => {
     const fn = () => {
         if (action === ACTIONS.THROW) {
             const doAction = () => {
@@ -47,9 +50,6 @@ const createTestTask = (action: ACTIONS, value: string, time: number | "INSTANT"
             }
         });
     };
-    if (id !== undefined) {
-        fn.id = id;
-    }
     return fn;
 };
 
@@ -547,39 +547,6 @@ describe("Queue", () => {
         q.destroy();
     });
 
-    it("allows to set own task id before starting the task", async () => {
-        const q = new Queue();
-
-        const events = [];
-
-        const handleEvent = (name, data) => {
-            const secondArg = name.includes("task-") ? data.id : data;
-
-            events.push([
-                name, secondArg,
-            ]);
-        };
-
-        q.addEventListener("task-add", handleEvent.bind(null, "task-add"));
-
-        const testTask = createTestTask(
-            ACTIONS.RESOLVE, "ok1", 100,
-        );
-        testTask.id = 1;
-
-        const taskInstance1 = q.add(testTask);
-
-        await Promise.all([
-            taskInstance1.promise.catch(noop),
-        ]);
-
-        events.must.eql([
-            ["task-add", 1],
-        ]);
-
-        q.destroy();
-    });
-
     it("emits right events", async () => {
         const q = new Queue({
             concurrency: 2,
@@ -587,8 +554,8 @@ describe("Queue", () => {
 
         const events = [];
 
-        const handleEvent = (name, data) => {
-            const secondArg = name.includes("task-") ? data.id : data;
+        const handleEvent = (name, task: Task<unknown>) => {
+            const secondArg = name.includes("task-") ? task.data?.id : task;
 
             events.push([
                 name, secondArg,
@@ -600,11 +567,11 @@ describe("Queue", () => {
         });
 
         const taskInstance1 = q.push(createTestTask(
-            ACTIONS.RESOLVE, "ok1", 100, 1,
-        ));
+            ACTIONS.RESOLVE, "ok1", 100,
+        ), { id: 1 });
         const taskInstance2 = q.push(createTestTask(
-            ACTIONS.RESOLVE, "ok2", 100, 2,
-        ));
+            ACTIONS.RESOLVE, "ok2", 100,
+        ), { id: 2 });
 
         await Promise.all([
             taskInstance1.promise.catch(noop),
@@ -612,23 +579,23 @@ describe("Queue", () => {
         ]);
 
         const taskInstance3 = q.push(createTestTask(
-            ACTIONS.REJECT, "err3", 100, 3,
-        ));
+            ACTIONS.REJECT, "err3", 100,
+        ), { id: 3 });
         const taskInstance4 = q.push(createTestTask(
-            ACTIONS.REJECT, "err4", 100, 4,
-        ));
+            ACTIONS.REJECT, "err4", 100,
+        ), { id: 4 });
         const taskInstance5 = q.push(createTestTask(
-            ACTIONS.REJECT, "err5", TIME.INSTANT, 5,
-        ));
+            ACTIONS.REJECT, "err5", TIME.INSTANT,
+        ), { id: 5 });
         const taskInstance6 = q.push(createTestTask(
-            ACTIONS.THROW, "thr6", TIME.INSTANT, 6,
-        ));
+            ACTIONS.THROW, "thr6", TIME.INSTANT,
+        ), { id: 6 });
         const taskInstance7 = q.prepend(createTestTask( // note prepend here
-            ACTIONS.RESOLVE, "ok7", TIME.INSTANT, 7,
-        ));
+            ACTIONS.RESOLVE, "ok7", TIME.INSTANT,
+        ), { id: 7 });
         const taskInstance8 = q.insertAt(createTestTask(
-            ACTIONS.RESOLVE, "ok8", 100, 8,
-        ), 1);
+            ACTIONS.RESOLVE, "ok8", 100,
+        ), 1, { id: 8 });
 
         await Promise.all([
             taskInstance3.promise.catch(noop),
@@ -740,8 +707,8 @@ describe("Queue", () => {
 
         const events = [];
 
-        const handleEvent = (name, data) => {
-            const secondArg = name.includes("task-") ? data.id : data;
+        const handleEvent = (name, task: Task) => {
+            const secondArg = name.includes("task-") ? task.data?.id : task;
 
             events.push([
                 name, secondArg,
@@ -762,10 +729,10 @@ describe("Queue", () => {
             results.push("OK:" + result);
         };
 
-        const taskInstance1 = q.add(createTestTask(ACTIONS.RESOLVE, "ok1", 100, 1));
-        const taskInstance2 = q.add(createTestTask(ACTIONS.REJECT, "err2", 100, 2));
-        const taskInstance3 = q.prepend(createTestTask(ACTIONS.REJECT, "err3", 100, 3));
-        const taskInstance4 = q.prepend(createTestTask(ACTIONS.RESOLVE, "ok4", 100, 4));
+        const taskInstance1 = q.add(createTestTask(ACTIONS.RESOLVE, "ok1", 100), { id: 1 });
+        const taskInstance2 = q.add(createTestTask(ACTIONS.REJECT, "err2", 100), { id: 2 });
+        const taskInstance3 = q.prepend(createTestTask(ACTIONS.REJECT, "err3", 100), { id: 3 });
+        const taskInstance4 = q.prepend(createTestTask(ACTIONS.RESOLVE, "ok4", 100), { id: 4 });
 
         taskInstance1.promise.then(handleTask, handleTask);
         taskInstance2.promise.then(handleTask, handleTask);
@@ -918,9 +885,9 @@ describe("Queue", () => {
     it("provides a way to cancel the task and checking for cancel each step", async () => {
         const q = new Queue();
 
-        let caught;
+        let caught: boolean | undefined = undefined;
 
-        const task = async (isCancelled) => {
+        const task: TaskFn<number> = async (isCancelled) => {
             await new Promise(resolve => setTimeout(resolve, 50));
             await isCancelled();
             await new Promise(resolve => setTimeout(resolve, 50));
@@ -937,14 +904,19 @@ describe("Queue", () => {
         };
 
         const myTask = q.add(task);
-        myTask.promise.catch((error) => {
+        myTask.promise.then(() => {
+            caught = false;
+        }).catch((error) => {
             caught = true;
             error.message.must.equal("Task cancelled");
         });
 
         setTimeout(myTask.cancel, 200);
-        await new Promise(resolve => setTimeout(resolve, 260)); // 260, because check happens every ~50ms and it's
+        await new Promise(resolve => setTimeout(resolve, 300)); // 300, because check happens every ~50ms and it's
         // not instant like in previous example, we need to give time for task to become aware that cancelling happened
+        // some extra
+
+        await waitFor(() => typeof caught === "boolean", 5);
 
         caught.must.be.true();
 
@@ -1166,6 +1138,30 @@ describe("Queue", () => {
         task4.getPosition().must.equal(1);
 
         q.destroy();
+    });
+
+    it("allows to get task position in waiting queue", () => {
+        const q = new Queue();
+        const task = async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        };
+
+        q.add(task);
+        q.add(task);
+        const task3 = q.add(task);
+
+        task3.getWaitingPosition().must.equal(1);
+        q.getTaskWaitingPosition(task3).must.equal(1);
+
+        q.setConcurrency(2);
+
+        task3.getWaitingPosition().must.equal(0);
+        q.getTaskWaitingPosition(task3).must.equal(0);
+
+        q.prepend(() => {});
+
+        task3.getWaitingPosition().must.equal(1);
+        q.getTaskWaitingPosition(task3).must.equal(1);
     });
 
     it("allows you to check if task is running", async () => {

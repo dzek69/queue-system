@@ -3,13 +3,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [UNRELEASED]
+## [4.0.0] - 2022-11-11
 ### Added
 - a method to pause/unpause a queue
+- methods (on task instance and queue) to get task waiting position (instead of position in the list that includes running tasks)
 ### Changed
 - `true` no longer needed as a task run argument to force run a task even if concurrency is full - in rare occasions this could be breaking change
 ### Fixed
 - assigning undefined as data shouldn't happen
+### Removed
+- possibility to use custom id-generating function when adding a task, tasks now has auto-generated read-only ids
 ### Dev
 - docs update
 - deps bump

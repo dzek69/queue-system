@@ -24,7 +24,6 @@ See here: https://dzek69.github.io/queue-system
 ### Soon
 - better types for event handlers
 - option to cancel ongoing tasks on destroy
-- add a method to get task position in the *waiting* queue
 - task itself should have queue position event to listen on
 
 ### Later

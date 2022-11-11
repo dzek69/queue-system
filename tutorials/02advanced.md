@@ -21,6 +21,17 @@ const task = q.add(taskFunction, data);
 console.log(task.data.user); // "john"
 ```
 
+### Task ID
+
+Each task is given basic auto-incrementing id. Use it when you need to differentiate tasks without keeping their
+references. Notice these ids aren't unique, on Node.js apps they will restart each time a server is restart, so they are
+not suitable to put into database. The IDs are read only.
+
+```javascript
+const task = q.add(taskFunction);
+console.log(task.id); // i.e. 5
+```
+
 ## Cancelling tasks
 
 Both not started and ongoing tasks can be cancelled. Not started task will be simply removed from the queue, while
@@ -52,7 +63,7 @@ You can check if task is cancelled using Task instance:
 task.isCancelled();
 ```
 
-> For information about cancelling ongoing tasks see: {@tutorial 04cancelling}.
+> For information about cancelling ongoing tasks see: {@page 04cancelling.md}.
 
 ## Getting tasks list from the queue
 
@@ -74,7 +85,7 @@ const tasks = q.filter((data, isRunning, isCancelled) => {
 
 This code will return all the tasks with `name` == "john" in data that are waiting for run.
 
-> If you need to constantly track queue length you can use {@tutorial 03events}.
+> If you need to constantly track queue length you can use {@page 03events.md}.
 
 ## Getting task position
 
@@ -96,10 +107,27 @@ Please note that running task isn't always first in the queue, because of two re
 - if a queue has concurrency set then few tasks can run at once, they can't be all first
 - another task may be added at first position while others are running - this new task won't run until there is free concurrency slot, but it will still be listed as first
 
-Because of that don't rely on this too much to show your users their job queue position.
-
 > When using `getTaskPosition`, but the task doesn't exist in the queue (it is finished or never had belonged to it)
 > you will get -1 in return.
+
+This method isn't really suitable to i.e. show a task position in the queue to users of your app, because they aren't
+interested in amount of running tasks. See next section.
+
+## Getting task position in a waiting queue
+
+You can get given task waiting position from the Task itself:
+
+```javascript
+const position = task.getWaitingPosition();
+```
+
+Or using Queue instance:
+
+```javascript
+const position = q.getTaskWaitingPosition(task);
+```
+
+This list doesn't include running tasks, so this is a best choice to i.e. show user his task position in the queue.
 
 ## Checking if the task is running
 
@@ -115,4 +143,4 @@ Or using Queue instance:
 const isRunning = q.isTaskRunning(task);
 ```
 
-To track **when** task started or ended use {@tutorial 03events}.
+To track **when** task started or ended use {@page 03events.md}.
