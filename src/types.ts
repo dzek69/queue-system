@@ -10,8 +10,6 @@ interface PromisedTaskFn<T> {
     id?: number;
 }
 
-type VerifyFn = () => boolean;
-
 type FilterFn = (data: { [key: string]: unknown } | undefined, isRunning: boolean, isCancelled: boolean) => boolean;
 
 type IsDestroyed = () => boolean;
@@ -22,6 +20,7 @@ type IsDestroyed = () => boolean;
  */
 interface QueueOptions {
     concurrency?: number;
+    paused?: boolean;
 }
 
 /**
@@ -46,7 +45,7 @@ type QueueFilterFunction = (data: unknown, isRunning: boolean, isCancelled: bool
 
 export type {
     TaskFn, PromisedTaskFn,
-    VerifyFn, FilterFn,
+    FilterFn,
     IsDestroyed,
     QueueOptions, QueueDestroyInfo, QueueFilterFunction,
 };

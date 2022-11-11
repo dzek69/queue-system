@@ -37,11 +37,8 @@ const task = q.add(taskFn);
 task.cancel();
 ```
 
-> Tip: If you need a sync processing after async part of your task (like a request) - make sure to `await isCancelled`
+> Tip: If you need a sync processing after async part of your task (like a request) - make sure to `await isCancelled()`
 before that sync processing to save resources as the processing results will go to waste anyway.
-
-> Note: Example above isn't perfect way of using `fetch` as the requests could probably go in parallel. This is example
-is focused on explaining how to use `isCancelled`.
 
 ## Using cancelPromise
 
@@ -54,7 +51,7 @@ Example:
 const taskFn = async (isCancelled, cancelPromise) => {
     const rawProducts = fetch("/products").then(r => r.json());
     const products = await Promise.race([rawProducts, cancelPromise]).then(transformProducts);
-    
+
     // same for comments
 }
 
@@ -71,7 +68,7 @@ You can use this method to abort the actual async job if this is supported, see 
 const taskFn = async (isCancelled, cancelPromise) => {
     const controller = new AbortController();
     const signal = controller.signal;
-    
+
     const rawProducts = fetch("/products", { signal }).then(r => r.json());
     try {
         const products = await Promise.race([rawProducts, cancelPromise]).then(transformProducts);
@@ -88,8 +85,8 @@ const taskFn = async (isCancelled, cancelPromise) => {
 
 ## Which method to use?
 
-Usually `cancelPromise` is a better choice for performance but the code is more verbose. `isCancelled()` method is
-simpler to implement and can be used where performance doesn't matter or as a starter for tasks that hadn't supported
+Usually `cancelPromise()` is a better choice for performance but the code is more verbose. `isCancelled()` function is
+simpler to implement and can be used where performance doesn't matter or as a starter for tasks that haven't supported
 cancel at all, to be upgraded later.
 
 You can of course mix both methods in your task functions.

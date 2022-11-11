@@ -36,6 +36,8 @@ class Queue {
 
     private _destroyed: boolean = false;
 
+    private _paused: boolean = false;
+
     public push: typeof Queue.prototype.add;
 
     public unshift: typeof Queue.prototype.prepend;
@@ -56,6 +58,7 @@ class Queue {
 
         this.push = this.add;
         this.unshift = this.prepend;
+        this._paused = Boolean(options.paused);
 
         this._ee = new EventEmitter();
 
@@ -95,14 +98,20 @@ class Queue {
     }
 
     private _runNext() {
-        const taskToRun = this._tasks.find((task) => {
-            return !this.isTaskRunning(task);
-        });
-        if (taskToRun) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            taskToRun.run();
-            if (this._isConcurrencySlotFree()) {
-                this._runNext();
+        if (this._paused) {
+            return;
+        }
+
+        while (this._isConcurrencySlotFree()) {
+            const taskToRun = this._tasks.find((task) => {
+                return !this.isTaskRunning(task);
+            });
+            if (taskToRun) {
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                taskToRun.run();
+            }
+            else {
+                break;
             }
         }
     }
@@ -112,10 +121,6 @@ class Queue {
     }
 
     private _createTask<V>(taskFn: TaskFn<V>, data?: { [key: string]: unknown }) {
-        const check = () => {
-            return this._isConcurrencySlotFree();
-        };
-
         const run: PromisedTaskFn<V> = async (
             isCancelled: () => Promise<void>,
             cancelPromise: Promise<never>,
@@ -157,7 +162,7 @@ class Queue {
             run.id = taskFn.id;
         }
         /* eslint-enable @typescript-eslint/no-use-before-define */
-        const task = new Task(this, run, check, () => this._destroyed);
+        const task = new Task(this, run, () => this._destroyed);
         if (data != null) {
             task.data = data;
         }
@@ -362,6 +367,15 @@ class Queue {
      */
     public isTaskRunning<V>(task: Task<V>) {
         return this._runningTasks.includes(task);
+    }
+
+    public pause() {
+        this._paused = true;
+    }
+
+    public unpause() {
+        this._paused = false;
+        this._runNext();
     }
 }
 

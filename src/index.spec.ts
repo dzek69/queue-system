@@ -349,7 +349,7 @@ describe("Queue", () => {
         const taskInstance3 = q.push(task);
         const taskInstance4 = q.push(task);
 
-        taskInstance2.start(true);
+        taskInstance2.start();
 
         await Promise.all([
             taskInstance1.promise,
@@ -1299,5 +1299,50 @@ describe("Queue", () => {
 
         q.destroy();
         console.error = originalError;
+    });
+
+    it("allows to pause and unpause the queue", async () => {
+        const q = new Queue({ paused: true });
+
+        for (let i = 0; i < 10; i++) {
+            const task = createTestTask(ACTIONS.RESOLVE, "", "INSTANT");
+            q.add(task);
+        }
+
+        q.getQueueSize().must.equal(10);
+
+        await new Promise(r => setTimeout(r, 100));
+
+        q.getQueueSize().must.equal(10);
+
+        q.unpause();
+
+        await new Promise(r => setTimeout(r, 1));
+
+        q.getQueueSize().must.equal(0);
+    });
+
+    // test for refactor safety
+    it("should not start additional task each time concurrency is changed", async () => {
+        const events: string = [];
+
+        const task1 = async () => {
+            events.push("1s");
+            await new Promise(r => setTimeout(r, 100));
+            events.push("1e");
+        };
+        const task2 = async () => {
+            events.push("2s");
+            await new Promise(r => setTimeout(r, 50));
+            events.push("2e");
+        };
+
+        const q = new Queue();
+        q.add(task1);
+        q.add(task2);
+        q.setConcurrency(1);
+        await new Promise(r => setTimeout(r, 200));
+
+        events.must.eql(["1s", "1e", "2s", "2e"]);
     });
 });

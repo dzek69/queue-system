@@ -5,23 +5,10 @@ import { Queue } from "queue-system";
 const { Queue } = require("queue-system");
 ```
 
-## What is a Task?
-
-**Task** instance is constructed with a task function {@link TaskFn} and should be given to one of the queue methods.
-Task behaves like a wrapper for given method, it doesn't instantly call it but waits until it's time to run it.
-
-Task "promisifies" synchronous methods too, it means that even if your method is synchronous - Task will still wrap it
-with a Promise to unify its API that is used to deal with tasks.
-
-To get access to actual result of a task being run - you need to get `promise` property from a task.
-
-> Note: It is important to attach `catch` listener to a task promise because Unhandled Rejection error may appear when
-async task function rejects or when both sync or async task function throws before returning a value.
-
 ## What is a Queue? Creating and destroying the queue
 
-A {@link Queue} is internally holding a **Task**s list. Each task stays in the queue until it is fulfilled
-(resolved or rejected, just like Promises), which means that running tasks are still kept in the queue.
+A {@link Queue} instance holds a list of tasks to run and by default runs them one by one. You can define concurrency to
+run multiple tasks at once.
 
 To create an empty queue just create new instance:
 ```javascript
@@ -31,10 +18,7 @@ const q = new Queue();
 Each instance of a Queue is separate queue that works independently. Queue constructor takes options parameter,
 {@link QueueOptions}.
 
-By default each queue will run one task at once, but you can define concurrency at construct or later with
-{@link setConcurrency}.
-
-To destroy a queue use:
+You can destroy a queue when needed, this will let run tasks to continue, but will stop future tasks from running:
 ```javascript
 const info = q.destroy();
 ````
@@ -45,7 +29,23 @@ The info returned is a {@link QueueDestroyInfo} object. It returns two lists of 
 
 > Keep in mind that although there is a way to cancel an ongoing task - this won't be done automatically on destroy.
 
-Destroying a queue makes its instance unuseable. You cannot add new tasks or do anything else.
+Destroying a queue makes its instance unusable. You cannot add new tasks or do anything else.
+
+## What is a Task?
+
+Before we advance to adding first task let's say something about tasks.
+
+When adding a task to a queue you call one of the methods like `add` and pass a standard javascript function -
+{@link TaskFn}. In return you will get a **Task** instance, which is a wrapper for task function {@link TaskFn}.
+You don't ever create these instances by yourself, they are created for you.
+
+Task "promisifies" synchronous functions, it means that even if your function is synchronous - Task will still wrap it
+with a Promise to unify return values.
+
+To get access to actual result of a task being run - you need to access `promise` property from a task.
+
+> Note: It is important to attach `catch` listener to a task promise because Unhandled Rejection error may appear when
+async task function rejects or when both sync or async task function throws before returning a value.
 
 ## Adding a task to a queue
 
@@ -53,7 +53,7 @@ When adding a task you will get a **Task** instance in return. You can use that 
 
 To add a task at the end of the queue:
 ```javascript
-const taskFunction = () => {}; // sync or async method
+const taskFunction = () => {}; // sync or async function
 const task = q.add(taskFunction);
 ```
 
@@ -70,7 +70,5 @@ At anytime you can force-start a task. Task will be started ignoring concurrency
 in the queue.
 
 ```javascript
-task.run(true);
+task.run();
 ```
-
-> Currently you need to pass `true` as an argument to force-start a task.

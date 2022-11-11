@@ -1,5 +1,5 @@
 import type { Queue } from "./Queue.js";
-import type { IsDestroyed, PromisedTaskFn, VerifyFn } from "./types";
+import type { IsDestroyed, PromisedTaskFn } from "./types";
 
 let id: number;
 id = 1;
@@ -10,8 +10,6 @@ class Task<Val> {
     private readonly _queue: Queue;
 
     private readonly _fn: PromisedTaskFn<Val>;
-
-    private readonly _check: VerifyFn;
 
     private _cancelled: boolean;
 
@@ -41,14 +39,12 @@ class Task<Val> {
      * Tasks instances should only be created by Queue instance. Do not use directly.
      * @param {Queue} queue - queue instance
      * @param {function} fn - task function
-     * @param {function} check - function that verifies if task can be started
      * @param {function} isQueueDestroyed - function that verifies if task can be started
      * @class Task
      */
-    public constructor(queue: Queue, fn: PromisedTaskFn<Val>, check: VerifyFn, isQueueDestroyed: IsDestroyed) {
+    public constructor(queue: Queue, fn: PromisedTaskFn<Val>, isQueueDestroyed: IsDestroyed) {
         this._queue = queue;
         this._fn = fn;
-        this._check = check;
 
         this._cancelled = false;
         this._started = false;
@@ -109,16 +105,12 @@ class Task<Val> {
 
     /**
      * Starts task.
-     * @param {[boolean]} force - force start immediately
      * @returns {void|Promise}
      * @throws Error - when task is already started or task belongs to queue that is destroyed
      */
-    public run(force?: boolean): undefined | Promise<unknown> {
+    public run(): undefined | Promise<unknown> {
         if (this._cancelled) {
             throw new Error("Task was cancelled.");
-        }
-        if (!force && !this._check()) {
-            return;
         }
         if (this._started) {
             throw new Error("Task already started.");

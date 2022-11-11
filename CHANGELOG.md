@@ -4,11 +4,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [UNRELEASED]
-### Dev
-- deps bump
-- tests code cleanup
+### Added
+- a method to pause/unpause a queue
+### Changed
+- `true` no longer needed as a task run argument to force run a task even if concurrency is full - in rare occasions this could be breaking change
 ### Fixed
 - assigning undefined as data shouldn't happen
+### Dev
+- docs update
+- deps bump
+- tests code cleanup
 
 ## [3.0.2] - 2021-07-06
 ### Fixed

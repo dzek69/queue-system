@@ -13,12 +13,12 @@ q.prepend(taskFunction, data);
 q.insertAt(taskFunction, 3, data);
 ```
 
-Task data is also exposed on its instance as `data` property.
+Task data is exposed on its instance as `data` property.
 
 ```javascript
-const data = {};
+const data = { user: "john" };
 const task = q.add(taskFunction, data);
-task.data === data; // true
+console.log(task.data.user); // "john"
 ```
 
 ## Cancelling tasks
@@ -42,8 +42,7 @@ q.cancelBy((taskData, isRunning, isCancelled) => {
 });
 ```
 
-Of course in this example you will cancel all John's tasks if mutiple was added and keep in mind that this method is
-slower for single tasks as it needs to loop and compare the whole queue.
+This code will cancel all John's tasks.
 
 > Note: Make your filtering function safe when it comes to task data being defined or in different shape for some tasks.
 
@@ -64,12 +63,18 @@ To get all tasks use:
 const tasks = q.getTasks();
 ```
 
+> Please take note that queue will list the tasks until they are finished. So already running tasks will still be listed.
+
 To get some tasks use:
 ```javascript
-const tasks = q.filter((data, isRunning, isCancelled) => {});
+const tasks = q.filter((data, isRunning, isCancelled) => {
+    return !isRunning && data && data.name === "john";
+});
 ```
 
-> If you need to track queue length you can use {@tutorial 03events}.
+This code will return all the tasks with `name` == "john" in data that are waiting for run.
+
+> If you need to constantly track queue length you can use {@tutorial 03events}.
 
 ## Getting task position
 
@@ -89,15 +94,14 @@ const position = q.getTaskPosition(task);
 
 Please note that running task isn't always first in the queue, because of two reasons:
 - if a queue has concurrency set then few tasks can run at once, they can't be all first
-- while running - a task may be added at first position - it won't run until there is free concurrency slot, but it will
-still be listed as first
+- another task may be added at first position while others are running - this new task won't run until there is free concurrency slot, but it will still be listed as first
 
-Don't rely on this too much to show your users their job queue position.
+Because of that don't rely on this too much to show your users their job queue position.
 
-> When the task doesn't exist in the queue (it is finished or never had belonged to it (when using `getTaskPosition`))
+> When using `getTaskPosition`, but the task doesn't exist in the queue (it is finished or never had belonged to it)
 > you will get -1 in return.
 
-## Checking if task is in running
+## Checking if the task is running
 
 You can check if given task is currently running using Task instance:
 
