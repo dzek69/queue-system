@@ -1,19 +1,18 @@
 # queue-system
 
-JavaScript tasks queuing system.
+Powerful yet simple JavaScript/TypeScript tasks queuing system.
 
 ## Features
 
-- allows running tasks one by one
-- allows running multiple tasks with defined concurrency
-- allows changing concurrency as needed while running
-- allows force start of a task
-- allows adding task at any place in the queue
-- allows cancelling tasks (tasks will know about that and can stop their job to save resources)
-- emits events allowing tracking queue progress
-- has simple api
-- is fully unit tested
-- TS support
+- 🛠️ full TypeScript support
+- 1️⃣ run tasks one by one or many of them at the same time with defined concurrency
+- 🏎️ change concurrency as you need, pause and unpause the queue
+- ➕ insert task at any position in the queue, put important tasks first or...
+- 💪 ...force start additional task
+- 🛑 cancel tasks, even running ones
+- 👀 events support to monitor your queue
+- 👶 simple API
+- ✔️ fully unit tested
 
 ## Documentation
 
