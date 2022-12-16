@@ -12,7 +12,7 @@ const noop = () => undefined;
  *
  * @remarks Not exported and not intended to instantiate manually.
  */
-class Task<ReturnValueType> {
+class Task<ReturnValueType = unknown> {
     private readonly _queue: Queue;
 
     private readonly _fn: PromisedTaskFn<ReturnValueType>;

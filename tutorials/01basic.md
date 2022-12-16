@@ -21,7 +21,7 @@ Each instance of a Queue is separate queue that works independently. Queue const
 You can destroy a queue when needed, this will let run tasks to continue, but will stop future tasks from running:
 ```javascript
 const info = q.destroy();
-````
+```
 
 The info returned is a {@link QueueDestroyInfo} object. It returns two lists of tasks:
 - `removed` - array of tasks that was queued but never had a chance to start

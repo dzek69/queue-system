@@ -1,11 +1,10 @@
 /* eslint-disable */
 // @TODO remove
 import PromiseAlternative from "promise";
-import { waitFor } from "bottom-line-utils";
+import {waitFor} from "bottom-line-utils";
 
-import type { Task, TaskFn } from "./index.js";
-
-import { EVENTS, Queue } from "./index.js";
+import type {Task, TaskFn} from "./index.js";
+import {EVENTS, Queue} from "./index.js";
 
 const noop = () => {};
 
@@ -554,13 +553,13 @@ describe("Queue", () => {
             concurrency: 2,
         });
 
-        const events = [];
+        const events: unknown[] = [];
 
-        const handleEvent = (name, task: Task<unknown>) => {
+        const handleEvent = (name, task: Task<unknown>, ...more: unknown[]) => {
             const secondArg = name.includes("task-") ? task.data?.id : task;
 
             events.push([
-                name, secondArg,
+                name, secondArg, ...more
             ]);
         };
 
@@ -618,13 +617,13 @@ describe("Queue", () => {
             ["task-start", 2],
             // awaiting here for two first before adding more
 
-            ["task-end", 1],
-            ["task-success", 1],
+            ["task-end", 1, "ok1"],
+            ["task-success", 1, "ok1"],
             ["task-remove", 1],
             ["queue-size", 1],
 
-            ["task-end", 2],
-            ["task-success", 2],
+            ["task-end", 2, "ok2"],
+            ["task-success", 2, "ok2"],
             ["task-remove", 2],
             ["queue-size", 0],
 
@@ -651,38 +650,38 @@ describe("Queue", () => {
             // expected start order: [7, 8, 5, 6]
             ["queue-size", 6],
 
-            ["task-end", 3],
-            ["task-error", 3],
+            ["task-end", 3, new Error("err3")],
+            ["task-error", 3, new Error("err3")],
             ["task-remove", 3],
             ["queue-size", 5],
 
             ["task-start", 7],
-            ["task-end", 7], // after task 3 is over, task 7 (prepend) will start and end instantly (because it's sync)
-            ["task-success", 7],
+            ["task-end", 7, "ok7"], // after task 3 is over, task 7 (prepend) will start and end instantly (because it's sync)
+            ["task-success", 7, "ok7"],
             ["task-remove", 7],
             ["queue-size", 4],
 
             ["task-start", 8], // async
 
-            ["task-end", 4],
-            ["task-error", 4],
+            ["task-end", 4, new Error("err4")],
+            ["task-error", 4, new Error("err4")],
             ["task-remove", 4],
             ["queue-size", 3],
 
             ["task-start", 5],
-            ["task-end", 5],
-            ["task-error", 5],
+            ["task-end", 5, new Error("err5")],
+            ["task-error", 5, new Error("err5")],
             ["task-remove", 5],
             ["queue-size", 2],
 
             ["task-start", 6],
-            ["task-end", 6],
-            ["task-thrown", 6],
+            ["task-end", 6, new Error("thr6")],
+            ["task-thrown", 6, new Error("thr6")],
             ["task-remove", 6],
             ["queue-size", 1],
 
-            ["task-end", 8],
-            ["task-success", 8],
+            ["task-end", 8, "ok8"],
+            ["task-success", 8, "ok8"],
             ["task-remove", 8],
             ["queue-size", 0],
         ]);

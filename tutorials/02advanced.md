@@ -144,3 +144,16 @@ const isRunning = q.isTaskRunning(task);
 ```
 
 To track **when** task started or ended use {@page 03events.md}.
+
+## Pausing the queue
+
+At any time you can pause the queue. This will let current tasks continue but will prevent future tasks from starting
+until queue is unpaused.
+
+```javascript
+const isRunning = q.pause();
+
+setTimeout(() => {
+    q.unpause()
+}, 60000); // unpause after a minute
+```

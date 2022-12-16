@@ -1,3 +1,5 @@
+import type { Task } from "./Task";
+
 /**
  * Events emitted on the Queue instance.
  * @example import { Queue, EVENTS } from "queue-system";
@@ -45,6 +47,18 @@ enum EVENTS {
     QUEUE_ORDER = "queue-order",
 }
 
-export {
-    EVENTS,
+type EventsTypes = {
+    [EVENTS.TASK_ADD]: (task: Task<unknown>) => void;
+    [EVENTS.TASK_REMOVE]: (task: Task<unknown>) => void;
+    [EVENTS.TASK_START]: (task: Task<unknown>) => void;
+    [EVENTS.TASK_END]: (task: Task<unknown>, result: unknown) => void;
+    [EVENTS.TASK_SUCCESS]: (task: Task<unknown>, result: unknown) => void;
+    [EVENTS.TASK_ERROR]: (task: Task<unknown>, error: Error) => void;
+    [EVENTS.TASK_THROWN]: (task: Task<unknown>, error: Error) => void;
+    [EVENTS.QUEUE_SIZE]: (size: number) => void;
+    [EVENTS.QUEUE_ORDER]: (order: Task<unknown>[]) => void;
 };
+
+export { EVENTS };
+
+export type { EventsTypes };

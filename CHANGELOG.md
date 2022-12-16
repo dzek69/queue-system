@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2022-11-11
+### Added
+- `TASK_SUCCESS`, `TASK_END`, `TASK_ERROR` and `TASK_THROWN` now sends the result/error as 2nd parameter to the event
+listener
+- missing docs for `pause`/`unpause`
+### Changed
+- better typings for event handlers, no more `any`s
+### Fixed
+- documentation links in `Basic usage`
+### Dev
+- deps update
+
 ## [4.0.0] - 2022-11-11
 ### Added
 - a method to pause/unpause a queue

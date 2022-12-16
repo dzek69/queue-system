@@ -22,7 +22,6 @@ See here: https://dzek69.github.io/queue-system
 ## To be done / roadmap
 
 ### Soon
-- better types for event handlers
 - option to cancel ongoing tasks on destroy
 - task itself should have queue position event to listen on
 
