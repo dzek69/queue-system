@@ -1,7 +1,7 @@
 /* eslint-disable */
 // @TODO remove
 import PromiseAlternative from "promise";
-import {waitFor} from "bottom-line-utils";
+import {waitFor} from "@ezez/utils";
 
 import type {Task, TaskFn} from "./index.js";
 import {EVENTS, Queue} from "./index.js";

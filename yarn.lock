@@ -1298,6 +1298,11 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
+"@ezez/utils@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@ezez/utils/-/utils-1.2.0.tgz#fad27f816de24cab9da4669a0c8b8518b5a9f2dd"
+  integrity sha512-FbR+5HAqLHcLt8K2G7N89Z4eXLM5tnn+6q0kcdrPxwxXvPRp2ujkQUV+0W4RLmvCuTiBta+1deuH+CMqCKvd7g==
+
 "@humanwhocodes/config-array@^0.11.6":
   version "0.11.7"
   resolved "https://registry.npmjs.org/@humanwhocodes/config-array/-/config-array-0.11.7.tgz#38aec044c6c828f6ed51d5d7ae3d9b9faf6dbb0f"
@@ -2103,11 +2108,6 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
   integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
-
-bottom-line-utils@^0.24.1:
-  version "0.24.1"
-  resolved "https://registry.npmjs.org/bottom-line-utils/-/bottom-line-utils-0.24.1.tgz#4a1f72d63cf5d1d4ea2405aeab1718bcd4eca916"
-  integrity sha512-1NaW3eok39c4aNRGgxaBKaikUIaJ/QCqfYpBKNAAvqE77BHiPnEAb3K6Zr73Suf/qTVBZ40T8A6IVUHWZ+Irbw==
 
 brace-expansion@^1.1.7:
   version "1.1.11"
