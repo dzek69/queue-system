@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import EventEmitter from "eventemitter3";
-import { ensureError } from "bottom-line-utils";
+import { ensureError, pull } from "@ezez/utils";
 
 import type TypedEmitter from "typed-emitter";
 import type { FilterFn, QueueOptions, TaskFn, QueueDestroyInfo, PromisedTaskFn } from "./types";
@@ -9,17 +9,6 @@ import type { EventsTypes } from "./const.js";
 import { Task } from "./Task.js";
 import { EVENTS } from "./const.js";
 import { isThenable } from "./isThenable.js";
-
-const NOT_FOUND = -1;
-
-const remove = (array: unknown[], searchItem: unknown) => {
-    const index = array.findIndex(item => item === searchItem);
-    if (index === NOT_FOUND) {
-        return;
-    }
-
-    array.splice(index, 1);
-};
 
 const knownEvents = Object.values(EVENTS);
 
@@ -159,7 +148,7 @@ class Queue {
                     return taskPromise.then((result) => {
                         end(EVENTS.TASK_SUCCESS, result);
                         return result;
-                    }, (error: unknown) => { // @TODO ensure error?
+                    }, (error: unknown) => {
                         const err = ensureError(error);
                         end(EVENTS.TASK_ERROR, err);
                         throw err;
@@ -312,7 +301,7 @@ class Queue {
 
     private _remove<V>(task: Task<V>) {
         const lengthBefore = this._tasks.length;
-        remove(this._tasks, task);
+        pull(this._tasks, task);
         if (this._tasks.length === lengthBefore) {
             throw new Error("Task not found in queue");
         }
@@ -322,7 +311,7 @@ class Queue {
     }
 
     private _removeRunning<V>(task: Task<V>) {
-        remove(this._runningTasks, task);
+        pull(this._runningTasks, task);
     }
 
     /**

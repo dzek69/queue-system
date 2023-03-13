@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "test": "NODE_ENV=test jest",
+    "test:windows": "set NODE_ENV=test & jest",
     "docs": "typedoc src/index.ts --out docs --includeVersion --excludePrivate --pluginPages ./pagesconfig.json",
     "compile": "yarn compile:esm && yarn compile:cjs",
     "compile:esm": "rm -rf esm && tsc --project tsconfig.esm.json && node ./build-scripts/compile.esm.after.mjs",
@@ -29,8 +30,8 @@
   "module": "./esm/index.js",
   "type": "module",
   "dependencies": {
-    "eventemitter3": "^4.0.4",
-    "bottom-line-utils": "^0.24.1"
+    "@ezez/utils": "^1.2.0",
+    "eventemitter3": "^4.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
